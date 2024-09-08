@@ -23,7 +23,7 @@ module alu_tb;
   );
 
   // Procedimiento para imprimir resultados del test
-  task static print_result;
+  task print_result;
     input [NB_OP-1:0] operation;
     input signed [NB_DATA-1:0] expected;
     input signed [NB_DATA-1:0] result;

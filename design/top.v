@@ -12,10 +12,10 @@ module top #(
     output wire [NB_LEDS-1:0] o_led
 );
 
-  reg [  NB_OP - 1 : 0] alu_op;
-  reg [NB_DATA - 1 : 0] alu_data_A;
-  reg [NB_DATA - 1 : 0] alu_data_B;
-  reg [NB_DATA - 1 : 0] alu_o_data;
+  reg  [  NB_OP - 1 : 0] alu_op;
+  reg  [NB_DATA - 1 : 0] alu_data_A;
+  reg  [NB_DATA - 1 : 0] alu_data_B;
+  wire [NB_DATA - 1 : 0] alu_o_data;
 
   // Instanciación del módulo ALU
   alu #(
@@ -27,7 +27,6 @@ module top #(
       .i_data_B(alu_data_B),
       .o_data(alu_o_data)
   );
-
 
   // Carga de operacion
   always @(posedge i_clk) begin
