@@ -7,7 +7,7 @@ module top #(
 ) (
     input wire [NB_SW-1:0] i_sw,
     input wire [NB_BTN-1:0] i_btn,
-    input wire i_clk,
+    input       i_clk,
     input wire i_reset,
     output wire [NB_LEDS-1:0] o_led
 );
@@ -16,6 +16,7 @@ module top #(
   reg  [NB_DATA - 1 : 0] alu_data_A;
   reg  [NB_DATA - 1 : 0] alu_data_B;
   wire [NB_DATA - 1 : 0] alu_o_data;
+  reg  [NB_DATA - 1 : 0] result;
 
   // Instanciación del módulo ALU
   alu #(
@@ -38,8 +39,8 @@ module top #(
 
   // Carga de operandos
   always @(posedge i_clk) begin
-    if (i_reset) // negado porque creo que es un reset activo en bajo
-        begin
+    if (~i_reset) // negado porque creo que es un reset activo en bajo
+    begin
       alu_data_A <= {NB_DATA - 1{1'b0}};
       alu_data_B <= {NB_DATA - 1{1'b0}};
     end else if (i_btn[0]) begin
@@ -53,5 +54,15 @@ module top #(
       alu_data_B <= alu_data_B;
     end
   end
-
+    
+  // secuencializacion de resultado
+  always @(posedge i_clk) begin
+    if (~i_reset)
+        result <= {NB_DATA - 1{1'b0}};
+    else 
+        result <= alu_o_data;
+  end
+  
+  assign o_led = result;
+  
 endmodule
