@@ -63,3 +63,9 @@ Las entradas se cargan en registros los cuales se conectan a la ALU. La salida d
         alu_op <= i_sw[NB_OP-1:0];
   end
 ```
+
+Para mapear las entradas y salidas del modulo top a pines de la FPGA que esten conectados a los componentes de interes se utiliza un archivo de constraint `tp1.xdc`. 
+
+En la documentacion de la placa FPGA utilizada (la Basys 3), se obtienen estos valores. Los mismos tambien se observan escritas sobre la placa.
+
+![basys3](https://digilent.com/reference/_media/basys3-frontbackviews.jpg)
