@@ -64,7 +64,10 @@ Las entradas se cargan en registros los cuales se conectan a la ALU. La salida d
   end
 ```
 
-Para mapear las entradas y salidas del modulo top a pines de la FPGA que esten conectados a los componentes de interes se utiliza un archivo de constraint `tp1.xdc`. 
+Para mapear las entradas y salidas del modulo top a pines de la FPGA que esten conectados a los componentes de interes se utiliza un archivo de constraint `.xdc`:
+```
+set_property -dict { PACKAGE_PIN U16 IOSTANDARD LVCMOS33 } [get_ports { o_led[0] }];
+```
 
 En la documentacion de la placa FPGA utilizada (la Basys 3), se obtienen estos valores. Los mismos tambien se observan escritas sobre la placa.
 
