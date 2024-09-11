@@ -2,7 +2,7 @@
 
 module alu_tb;
 
-  // Parámetros
+  // Parametros
   localparam NB_OP = 6;
   localparam NB_DATA = 8;
 
@@ -11,7 +11,7 @@ module alu_tb;
   reg signed [NB_DATA-1:0] i_data_A, i_data_B;
   wire signed [NB_DATA-1:0] o_data;
 
-  // Instanciación del módulo ALU
+  // Instanciacion del modulo ALU
   alu #(
       .NB_OP  (NB_OP),
       .NB_DATA(NB_DATA)

@@ -29,9 +29,9 @@ module top #(
       .o_data(o_led)
   );
 
-  // Carga de operacion
+  // Carga de operador
   always @(posedge i_clk) begin
-    if (i_reset) alu_op <= {(NB_OP - 1) {1'b0}};
+    if (i_reset) alu_op <= {(NB_OP) {1'b0}};
     else if (i_btn[2]) alu_op <= i_sw[NB_OP-1:0];
   end
 
@@ -39,8 +39,8 @@ module top #(
   always @(posedge i_clk) begin
     if (i_reset) // negado porque creo que es un reset activo en bajo
     begin
-      alu_data_A <= {(NB_DATA - 1) {1'b0}};
-      alu_data_B <= {(NB_DATA - 1) {1'b0}};
+      alu_data_A <= {(NB_DATA) {1'b0}};
+      alu_data_B <= {(NB_DATA) {1'b0}};
     end else if (i_btn[0]) alu_data_A <= i_sw[NB_DATA-1:0];
     else if (i_btn[1]) alu_data_B <= i_sw[NB_DATA-1:0];
   end

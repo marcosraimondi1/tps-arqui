@@ -11,7 +11,7 @@ module alu #(
   localparam ADD_OP = 6'b100000;
   localparam SUB_OP = 6'b100010;
   localparam AND_OP = 6'b100100;
-  localparam OR_OP = 6'b100101;
+  localparam OR_OP  = 6'b100101;
   localparam XOR_OP = 6'b100110;
   localparam SRA_OP = 6'b000011;
   localparam SRL_OP = 6'b000010;
