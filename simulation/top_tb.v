@@ -8,7 +8,7 @@ module top_tb;
   localparam NB_LEDS = 8;
   localparam NB_DATA = 8;
   localparam NB_OP = 6;
-  
+
   // Operadores
   localparam ADD_OP = 6'b100000;
   localparam SUB_OP = 6'b100010;
@@ -44,7 +44,7 @@ module top_tb;
   );
 
   // Generador de reloj
-  always #5 i_clk = ~i_clk;  // Reloj de 10ns 
+  always #5 i_clk = ~i_clk;  // Reloj de 10ns
 
   // Procedimiento para inicializar y probar
   initial begin
@@ -61,7 +61,7 @@ module top_tb;
     // Configuracion de operacion de suma (ADD)
     i_sw  = 8'b00001010;  // Operando A = 10
     i_btn = 3'b001;  // Boton para cargar operando A
-    #10;             // Espero un ciclo de clock
+    #10;  // Espero un ciclo de clock
     i_btn = 3'b000;  // Liberar boton
 
     i_sw  = 8'b00000101;  // Operando B = 5
@@ -74,7 +74,7 @@ module top_tb;
     #10;
     i_btn = 3'b000;  // Liberar boton
 
-    #10;  
+    #10;
 
     // Verificar resultado de suma
     if (o_led === 8'd15) begin
@@ -99,7 +99,7 @@ module top_tb;
     #10;
     i_btn = 3'b000;  // Liberar boton
 
-    #10;  
+    #10;
 
     // Verificar resultado de resta
     if (o_led === 8'd10) begin
