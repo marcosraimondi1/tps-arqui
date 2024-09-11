@@ -71,3 +71,7 @@ set_property -dict { PACKAGE_PIN U16 IOSTANDARD LVCMOS33 } [get_ports { o_led[0]
 En la documentacion de la placa FPGA utilizada (la Basys 3), se obtienen estos valores. Los mismos tambien se observan escritas sobre la placa.
 
 ![basys3](https://digilent.com/reference/_media/basys3-frontbackviews.jpg)
+
+## Informe 
+Disponible en : https://docs.google.com/document/d/1BFAHgk_Q3ljHwOA2Q1gfemC-p4GzzkGQw3pMOsoAiRY/edit?usp=sharing
+
