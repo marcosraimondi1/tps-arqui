@@ -1,7 +1,7 @@
 # Trabajo Practico 1
 
 ## Integrantes
-- [Giuliano M. Palombarini](giuli2803@gmail.com)
+- [Giuliano M. Palombarini](giulianopalombarini@mi.unc.edu.ar)
 - [Marcos Raimondi](marcosraimondi1@mi.unc.edu.ar)
 
 ## Consigna
@@ -34,8 +34,7 @@ NOR | 100111
 Se desarrollan 2 modulos, uno para la ALU y otro para el top el cual implementa una ALU. 
 
 ### ALU
-La ALU (Unidad Aritmetico Logica) es un circuito digital que realiza operaciones aritmeticas y logicas 
-y se implementa de manera puramente combinacional. 
+La ALU (Unidad Aritmetico Logica) es un circuito digital que realiza operaciones aritmeticas y logicas, la cual se implementa de manera puramente combinacional. 
 
 En este caso, se implementan las operaciones de suma, resta, and, or, xor, sra (desplazamiento hacia la derecha aritmetico), 
 srl (desplazamiento hacia la derecha logico) y nor.
