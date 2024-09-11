@@ -12,9 +12,11 @@
     - El testbench debe incluir generacion de entradas aleatorias y codigo de chequeo automatico.
 4. Simular el diseno usando las herramientas de simulacion de vivado incluyendo analisis de tiempo.
 
-## Operaciones de la ALU
+## Diagrama en bloque del sistema
 
-Tabla de operaciones de la ALU
+![image](https://github.com/user-attachments/assets/6de57965-78a2-4e1a-95e7-16b5e7db0c3d)
+
+## Operaciones de la ALU
 
 Operación | Código
 --- | ---
