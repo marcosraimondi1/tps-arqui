@@ -15,6 +15,8 @@ module alu_tb;
   localparam SRL_OP = 6'b000010;
   localparam NOR_OP = 6'b100111;
 
+  integer i; // Contador de iteraciones
+
   // Senales
   reg [NB_OP-1:0] i_op;
   reg signed [NB_DATA-1:0] i_data_A, i_data_B;
@@ -35,92 +37,109 @@ module alu_tb;
   initial begin
 
     // Test de suma
-    i_data_A = 8'd10;
-    i_data_B = 8'd5;
     i_op = ADD_OP;
-    #10;
-    if(o_data !== (i_data_A + i_data_B)) begin
-      $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d", o_data, i_data_A + i_data_B);
-    end else begin
-      $display("Test Passed: OP = ADD_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A + i_data_B)) begin
+        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A + i_data_B);
+    end
     end
 
     // Test de resta
-    i_data_A = 8'd15;
-    i_data_B = 8'd5;
     i_op = SUB_OP;
-    #10;
-    if(o_data !== (i_data_A - i_data_B)) begin
-     $fatal("Test Failed: OP = SUB_OP, Result = %d, Expected = %d", o_data, i_data_A - i_data_B);
-    end else begin
-      $display("Test Passed: OP = SUB_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A - i_data_B)) begin
+      $fatal("Test Failed: OP = SUB_OP, Result = %d, Expected = %d",
+        o_data,
+        i_data_A - i_data_B);
+      end
     end
-
     // Test de AND
-    i_data_A = 8'b11001100;
-    i_data_B = 8'b10101010;
     i_op = AND_OP;
-    #10;
-    if(o_data !== (i_data_A & i_data_B)) begin
-      $fatal("Test Failed: OP = AND_OP, Result = %d, Expected = %d", o_data, i_data_A & i_data_B);
-    end else begin
-      $display("Test Passed: OP = AND_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A & i_data_B)) begin
+        $fatal("Test Failed: OP = AND_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A & i_data_B);
+      end
     end
 
     // Test de OR
-    i_data_A = 8'b11001100;
-    i_data_B = 8'b10101010;
     i_op = OR_OP;
-    #10;
-    if(o_data !== (i_data_A | i_data_B)) begin
-      $fatal("Test Failed: OP = OR_OP, Result = %d, Expected = %d", o_data, i_data_A | i_data_B);
-    end else begin
-      $display("Test Passed: OP = OR_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A | i_data_B)) begin
+        $fatal("Test Failed: OP = OR_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A | i_data_B);
+      end
     end
 
     // Test de XOR
-    i_data_A = 8'b11001100;
-    i_data_B = 8'b10101010;
     i_op = XOR_OP;
-    #10;
-    if(o_data !== (i_data_A ^ i_data_B)) begin
-      $fatal("Test Failed: OP = XOR_OP, Result = %d, Expected = %d", o_data, i_data_A ^ i_data_B);
-    end else begin
-      $display("Test Passed: OP = XOR_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A ^ i_data_B)) begin
+        $fatal("Test Failed: OP = XOR_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A ^ i_data_B);
+      end
     end
 
     // Test de Shift Right Arithmetic (SRA)
-    i_data_A = -8'd16;  // -16 en complemento a dos
-    i_data_B = 8'd2;
     i_op = SRA_OP;
-    #10;
-    if(o_data !== (i_data_A >>> i_data_B)) begin
-      $fatal("Test Failed: OP = SRA_OP, Result = %d, Expected = %d",o_data, i_data_A >>> i_data_B);
-    end else begin
-      $display("Test Passed: OP = SRA_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A >>> i_data_B)) begin
+        $fatal("Test Failed: OP = SRA_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A >>> i_data_B);
+      end
     end
 
     // Test de Shift Right Logical (SRL)
-    i_data_A = 8'd16;
-    i_data_B = 8'd2;
     i_op = SRL_OP;
-    #10;
-    if(o_data !== (i_data_A >> i_data_B)) begin
-      $fatal("Test Failed: OP = SRL_OP, Result = %d, Expected = %d", o_data, i_data_A >> i_data_B);
-    end else begin
-      $display("Test Passed: OP = SRL_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (i_data_A >> i_data_B)) begin
+        $fatal("Test Failed: OP = SRL_OP, Result = %d, Expected = %d",
+          o_data,
+          i_data_A >> i_data_B);
+      end
     end
 
     // Test de NOR
-    i_data_A = 8'b11001100;
-    i_data_B = 8'b10101010;
     i_op = NOR_OP;
-    #10;
-    if(o_data !== (~(i_data_A | i_data_B))) begin
-      $fatal("Test Failed: OP = NOR_OP, Result = %d, Expected = %d",o_data,~(i_data_A | i_data_B));
-    end else begin
-      $display("Test Passed: OP = NOR_OP");
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_A = $urandom % (2 ** NB_DATA);
+      i_data_B = $urandom % (2 ** NB_DATA);
+      #10;
+      if(o_data !== (~(i_data_A | i_data_B))) begin
+        $fatal("Test Failed: OP = NOR_OP, Result = %d, Expected = %d",
+          o_data,
+          ~(i_data_A | i_data_B));
+      end
     end
+
+    $display("Passed ALU Test Bench");
 
     $finish;
   end
