@@ -11,13 +11,13 @@ module alu #(
   localparam ADD_OP = 6'b100000;
   localparam SUB_OP = 6'b100010;
   localparam AND_OP = 6'b100100;
-  localparam OR_OP  = 6'b100101;
+  localparam OR_OP = 6'b100101;
   localparam XOR_OP = 6'b100110;
   localparam SRA_OP = 6'b000011;
   localparam SRL_OP = 6'b000010;
   localparam NOR_OP = 6'b100111;
 
-  reg [NB_DATA-1:0] res;
+  reg signed [NB_DATA-1:0] res;
 
   always @(*) begin : alu
     case (i_op)
@@ -29,7 +29,7 @@ module alu #(
       SRA_OP:  res = i_data_A >>> i_data_B;  // aritmetico: el nuevo bit mantiene el signo
       SRL_OP:  res = i_data_A >> i_data_B;  // logico: el nuevo bit es 0
       NOR_OP:  res = ~(i_data_A | i_data_B);
-      default: res = 0;
+      default: res = {(NB_DATA) {1'b0}};
     endcase
   end
 
