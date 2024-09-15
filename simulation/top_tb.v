@@ -124,7 +124,7 @@ module top_tb;
       i_btn = 3'b000;  // Liberar boton
 
       if (o_led !== (i_data_A - i_data_B)) begin
-        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d", o_led, i_data_A - i_data_B);
+        $fatal("Test Failed: OP = SUB_OP, Result = %d, Expected = %d", o_led, i_data_A - i_data_B);
       end
     end
 
