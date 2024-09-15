@@ -19,11 +19,14 @@ module top_tb;
   localparam SRL_OP = 6'b000010;
   localparam NOR_OP = 6'b100111;
 
+  integer i;
+
   // Senales de entrada
   reg [NB_SW-1:0] i_sw;
   reg [NB_BTN-1:0] i_btn;
   reg i_clk;
   reg i_reset;
+  reg signed [NB_DATA-1:0] i_data_A, i_data_B;
 
   // Senales de salida
   wire [NB_LEDS-1:0] o_led;
@@ -53,59 +56,76 @@ module top_tb;
     i_reset = 0;
     i_sw = 0;
     i_btn = 0;
+    i_data_A = 0;
+    i_data_B = 0;
 
     // Prueba de reset
     #10 i_reset = 1;  // Activar reset
     #10 i_reset = 0;  // Desactivar reset
 
+    if (top1.alu_data_A !== 8'b0) begin
+      $fatal("Test Failed: Reset, alu_data_A = %d, Expected = 0", top1.alu_data_A);
+    end
+
+    if (top1.alu_data_B !== 8'b0) begin
+      $fatal("Test Failed: Reset, alu_data_B = %d, Expected = 0", top1.alu_data_B);
+    end
+
     // Configuracion de operacion de suma (ADD)
-    i_sw  = 8'b00001010;  // Operando A = 10
-    i_btn = 3'b001;  // Boton para cargar operando A
-    #10;  // Espero un ciclo de clock
-    i_btn = 3'b000;  // Liberar boton
-
-    i_sw  = 8'b00000101;  // Operando B = 5
-    i_btn = 3'b010;  // Boton para cargar operando B
-    #10;
-    i_btn = 3'b000;  // Liberar boton
-
     i_sw  = ADD_OP;  // Codigo de operacion ADD
     i_btn = 3'b100;  // Boton para cargar operador
     #10;
     i_btn = 3'b000;  // Liberar boton
 
-    #10;
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_B = $urandom % (2 ** NB_DATA);
+      i_data_A = $urandom % (2 ** NB_DATA);
+      #10;
 
-    // Verificar resultado de suma
-    if (o_led === 8'd15) begin
-      $display("Test Passed: ADD operation, Result = %d", o_led);
-    end else begin
-      $display("Test Failed: ADD operation, Result = %d, Expected = 15", o_led);
+      i_sw  = i_data_A;
+      i_btn = 3'b001;  // Boton para cargar operando A
+      #10;  // Espero un ciclo de clock
+      i_btn = 3'b000;  // Liberar boton
+      #10;
+
+      i_sw  = i_data_B;
+      i_btn = 3'b010;  // Boton para cargar operando B
+      #10;
+      i_btn = 3'b000;  // Liberar boton
+
+      if (o_led !== (i_data_A + i_data_B)) begin
+        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d", o_led, i_data_A + i_data_B);
+      end
     end
 
+
+    #10;
+
     // Configuracion de operacion de resta (SUB)
-    i_sw  = 8'b00001111;  // Operando A = 15
-    i_btn = 3'b001;  // Boton para cargar operando A
+    i_sw  = SUB_OP;  // Codigo de operacion ADD
+    i_btn = 3'b100;  // Boton para cargar operador
     #10;
     i_btn = 3'b000;  // Liberar boton
 
-    i_sw  = 8'b00000101;  // Operando B = 5
-    i_btn = 3'b010;  // Boton para cargar operando B
-    #10;
-    i_btn = 3'b000;  // Liberar boton
+    for (i = 0; i < 10; i = i + 1) begin
+      i_data_B = $urandom % (2 ** NB_DATA);
+      i_data_A = $urandom % (2 ** NB_DATA);
+      #10;
 
-    i_sw  = SUB_OP;  // Codigo de operacion SUB
-    i_btn = 3'b100;  // Boton para cargar operacion
-    #10;
-    i_btn = 3'b000;  // Liberar boton
+      i_sw  = i_data_A;
+      i_btn = 3'b001;  // Boton para cargar operando A
+      #10;  // Espero un ciclo de clock
+      i_btn = 3'b000;  // Liberar boton
+      #10;
 
-    #10;
+      i_sw  = i_data_B;
+      i_btn = 3'b010;  // Boton para cargar operando B
+      #10;
+      i_btn = 3'b000;  // Liberar boton
 
-    // Verificar resultado de resta
-    if (o_led === 8'd10) begin
-      $display("Test Passed: SUB operation, Result = %d", o_led);
-    end else begin
-      $display("Test Failed: SUB operation, Result = %d, Expected = 10", o_led);
+      if (o_led !== (i_data_A - i_data_B)) begin
+        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d", o_led, i_data_A - i_data_B);
+      end
     end
 
     // Terminar simulacion

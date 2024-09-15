@@ -9,13 +9,13 @@ module alu_tb;
   localparam ADD_OP = 6'b100000;
   localparam SUB_OP = 6'b100010;
   localparam AND_OP = 6'b100100;
-  localparam OR_OP  = 6'b100101;
+  localparam OR_OP = 6'b100101;
   localparam XOR_OP = 6'b100110;
   localparam SRA_OP = 6'b000011;
   localparam SRL_OP = 6'b000010;
   localparam NOR_OP = 6'b100111;
 
-  integer i; // Contador de iteraciones
+  integer i;  // Contador de iteraciones
 
   // Senales
   reg [NB_OP-1:0] i_op;
@@ -42,11 +42,9 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A + i_data_B)) begin
-        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A + i_data_B);
-    end
+      if (o_data !== (i_data_A + i_data_B)) begin
+        $fatal("Test Failed: OP = ADD_OP, Result = %d, Expected = %d", o_data, i_data_A + i_data_B);
+      end
     end
 
     // Test de resta
@@ -55,10 +53,8 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A - i_data_B)) begin
-      $fatal("Test Failed: OP = SUB_OP, Result = %d, Expected = %d",
-        o_data,
-        i_data_A - i_data_B);
+      if (o_data !== (i_data_A - i_data_B)) begin
+        $fatal("Test Failed: OP = SUB_OP, Result = %d, Expected = %d", o_data, i_data_A - i_data_B);
       end
     end
     // Test de AND
@@ -67,10 +63,8 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A & i_data_B)) begin
-        $fatal("Test Failed: OP = AND_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A & i_data_B);
+      if (o_data !== (i_data_A & i_data_B)) begin
+        $fatal("Test Failed: OP = AND_OP, Result = %d, Expected = %d", o_data, i_data_A & i_data_B);
       end
     end
 
@@ -80,10 +74,8 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A | i_data_B)) begin
-        $fatal("Test Failed: OP = OR_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A | i_data_B);
+      if (o_data !== (i_data_A | i_data_B)) begin
+        $fatal("Test Failed: OP = OR_OP, Result = %d, Expected = %d", o_data, i_data_A | i_data_B);
       end
     end
 
@@ -93,10 +85,8 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A ^ i_data_B)) begin
-        $fatal("Test Failed: OP = XOR_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A ^ i_data_B);
+      if (o_data !== (i_data_A ^ i_data_B)) begin
+        $fatal("Test Failed: OP = XOR_OP, Result = %d, Expected = %d", o_data, i_data_A ^ i_data_B);
       end
     end
 
@@ -106,10 +96,9 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A >>> i_data_B)) begin
-        $fatal("Test Failed: OP = SRA_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A >>> i_data_B);
+      if (o_data !== (i_data_A >>> i_data_B)) begin
+        $fatal("Test Failed: OP = SRA_OP, Result = %d, Expected = %d", o_data,
+               i_data_A >>> i_data_B);
       end
     end
 
@@ -119,10 +108,9 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (i_data_A >> i_data_B)) begin
-        $fatal("Test Failed: OP = SRL_OP, Result = %d, Expected = %d",
-          o_data,
-          i_data_A >> i_data_B);
+      if (o_data !== (i_data_A >> i_data_B)) begin
+        $fatal("Test Failed: OP = SRL_OP, Result = %d, Expected = %d", o_data,
+               i_data_A >> i_data_B);
       end
     end
 
@@ -132,10 +120,9 @@ module alu_tb;
       i_data_A = $urandom % (2 ** NB_DATA);
       i_data_B = $urandom % (2 ** NB_DATA);
       #10;
-      if(o_data !== (~(i_data_A | i_data_B))) begin
-        $fatal("Test Failed: OP = NOR_OP, Result = %d, Expected = %d",
-          o_data,
-          ~(i_data_A | i_data_B));
+      if (o_data !== (~(i_data_A | i_data_B))) begin
+        $fatal("Test Failed: OP = NOR_OP, Result = %d, Expected = %d", o_data,
+               ~(i_data_A | i_data_B));
       end
     end
 
