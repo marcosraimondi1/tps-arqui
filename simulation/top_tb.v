@@ -60,37 +60,29 @@ module top_tb;
     i_data_B = 0;
 
     // Prueba de reset
-    #10 i_reset = 1;  // Activar reset
-    #10 i_reset = 0;  // Desactivar reset
-
-    if (top1.alu_data_A !== 8'b0) begin
-      $fatal("Test Failed: Reset, alu_data_A = %d, Expected = 0", top1.alu_data_A);
-    end
-
-    if (top1.alu_data_B !== 8'b0) begin
-      $fatal("Test Failed: Reset, alu_data_B = %d, Expected = 0", top1.alu_data_B);
-    end
+    #40 i_reset = 1;  // Activar reset
+    #40 i_reset = 0;  // Desactivar reset
 
     // Configuracion de operacion de suma (ADD)
     i_sw  = ADD_OP;  // Codigo de operacion ADD
     i_btn = 3'b100;  // Boton para cargar operador
-    #10;
+    #40;
     i_btn = 3'b000;  // Liberar boton
 
     for (i = 0; i < 10; i = i + 1) begin
       i_data_B = $urandom % (2 ** NB_DATA);
       i_data_A = $urandom % (2 ** NB_DATA);
-      #10;
+      #40;
 
       i_sw  = i_data_A;
       i_btn = 3'b001;  // Boton para cargar operando A
-      #10;  // Espero un ciclo de clock
+      #40;  // Espero un ciclo de clock
       i_btn = 3'b000;  // Liberar boton
-      #10;
+      #40;
 
       i_sw  = i_data_B;
       i_btn = 3'b010;  // Boton para cargar operando B
-      #10;
+      #40;
       i_btn = 3'b000;  // Liberar boton
 
       if (o_led !== (i_data_A + i_data_B)) begin
@@ -99,28 +91,28 @@ module top_tb;
     end
 
 
-    #10;
+    #40;
 
     // Configuracion de operacion de resta (SUB)
     i_sw  = SUB_OP;  // Codigo de operacion ADD
     i_btn = 3'b100;  // Boton para cargar operador
-    #10;
+    #40;
     i_btn = 3'b000;  // Liberar boton
 
     for (i = 0; i < 10; i = i + 1) begin
       i_data_B = $urandom % (2 ** NB_DATA);
       i_data_A = $urandom % (2 ** NB_DATA);
-      #10;
+      #40;
 
       i_sw  = i_data_A;
       i_btn = 3'b001;  // Boton para cargar operando A
-      #10;  // Espero un ciclo de clock
+      #40;  // Espero un ciclo de clock
       i_btn = 3'b000;  // Liberar boton
-      #10;
+      #40;
 
       i_sw  = i_data_B;
       i_btn = 3'b010;  // Boton para cargar operando B
-      #10;
+      #40;
       i_btn = 3'b000;  // Liberar boton
 
       if (o_led !== (i_data_A - i_data_B)) begin

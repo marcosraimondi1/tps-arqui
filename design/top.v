@@ -34,9 +34,12 @@ module top #(
       alu_data_A <= {(NB_DATA) {1'b0}};
       alu_data_B <= {(NB_DATA) {1'b0}};
       alu_op <= {(NB_OP) {1'b0}};
-    end else if (i_btn[0]) alu_data_A <= i_sw[NB_DATA-1:0];
-    else if (i_btn[1]) alu_data_B <= i_sw[NB_DATA-1:0];
-    else if (i_btn[2]) alu_op <= i_sw[NB_OP-1:0];
+    end else begin
+      if (i_btn[0]) alu_data_A <= i_sw[NB_DATA-1:0];
+      if (i_btn[1]) alu_data_B <= i_sw[NB_DATA-1:0];
+      if (i_btn[2]) alu_op <= i_sw[NB_OP-1:0];
+    end
+
   end
 
   assign o_test_led = i_reset;
