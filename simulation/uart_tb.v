@@ -7,6 +7,7 @@ module uart_tb;
   localparam NCYCLES_PER_TICK = 163;
 
   // Senales
+  integer i;
   wire o_tick;
   wire tx_done;
   wire o_tx_i_rx;
@@ -16,7 +17,6 @@ module uart_tb;
   reg i_clk;
   reg i_reset;
   reg tx_start;
-  reg i;
   reg [NB_DATA-1:0] tx_data;
 
   baudRateGen #(
@@ -65,17 +65,19 @@ module uart_tb;
 
     // Tests
     for (i = 0; i < 10; i = i + 1) begin
-      #100 tx_data = $urandom % (2 ** NB_DATA);
-      #20 tx_start = 1;
-      #20 tx_start = 0;
+      tx_data = $urandom % (2 ** NB_DATA);
+      #20;
+      tx_start = 1;
+      #20;
+      tx_start = 0;
 
-      @(posedge rx_done);
+      @(posedge tx_done);
 
       if (tx_data != rx_data) begin
+        $fatal("Failed UART Test Bench, expected tx_data (%d) to be equal to rx_data (%d)",
+               tx_data, rx_data);
       end
     end
-
-
 
     $display("Passed UART Test Bench");
 
