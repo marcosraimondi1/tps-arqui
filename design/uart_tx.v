@@ -77,10 +77,7 @@ module uart_tx #(
       end
 
       default: begin
-        state <= IDLE_STATE;
-        tx_done <= 0;
-        tick_count <= 4'b0;
-        index <= 0;
+        next_state = IDLE_STATE;
       end
     endcase
   end
