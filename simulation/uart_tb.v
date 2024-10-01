@@ -64,13 +64,22 @@ module uart_tb;
     #100 i_reset = 0;
 
     // Tests
-    for (i = 0; i < 2; i = i + 1) begin
+    for (i = 0; i < 100; i = i + 1) begin
       tx_data = $urandom % (2 ** NB_DATA);
       #20;
       tx_start = 1;
       #20;
       tx_start = 0;
-      #600000;
+
+      // esperar hasta que termine la transmision para mandar el siguiente
+      // dato
+      @(posedge tx_done);
+
+      if (tx_data != rx_data) begin
+        $fatal("Error: tx_data = %d, rx_data = %d", tx_data, rx_data);
+      end
+
+      #20;  // hay que esperar un ciclo de clock antes de mandar el siguiente dato
     end
 
     $display("Passed UART Test Bench");

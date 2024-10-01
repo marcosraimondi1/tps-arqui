@@ -66,10 +66,11 @@ module uart_tx #(
             next_tick_count = 0;
             next_data = data >> 1;  // En data[0] esta el siguiente bit
             if (data_count < (FRAME_LEN - 1)) begin
+              next_data_count = data_count + 1;
+            end else begin
+              // terminamos de enviar
               next_state = IDLE_STATE;
               tx_done = 1'b1;
-            end else begin
-              next_data_count = data_count + 1;
             end
           end
         end
