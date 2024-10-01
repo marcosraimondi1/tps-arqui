@@ -1,6 +1,5 @@
 module top #(
-    parameter NB_DATA = 8,
-    parameter NCYCLES_PER_TICK = 163
+    parameter NB_DATA = 8
 ) (
     input  wire sys_clk100,
     input  wire i_reset,
@@ -9,33 +8,36 @@ module top #(
     output wire o_test_led
 );
 
-  wire clk_50;
+  // wire clk_50;
   wire o_tick;
   wire [NB_DATA-1:0] rx_data;
   wire rx_done;
   wire tx_done;
 
-  clk_wiz_0 clk_wiz (
-      .CLK_50MHZ(clk_50),
-      .reset(i_reset),
-      .clk_in1(sys_clk100)
-  );
+  // clk_wiz_0 clk_wiz (
+  //     .CLK_50MHZ(clk_50),
+  //     .reset(i_reset),
+  //     .clk_in1(sys_clk100)
+  // );
 
   baudRateGen #(
-      .NCYCLES_PER_TICK(NCYCLES_PER_TICK)
+      .BAUD_RATE(19200),
+      .CLK_FREQ(100_000_000),
+      .OVERSAMPLING(16)
   ) baudRateGen1 (
       .i_reset(i_reset),
-      .i_clk  (clk_50),
+      .i_clk  (sys_clk100),
       .o_tick (o_tick)
   );
 
   uart_rx #(
-      .NB_DATA(NB_DATA)
+      .NB_DATA(NB_DATA),
+      .NB_STOP(1)
   ) uart_rx1 (
       .i_reset(i_reset),
       .i_tick(o_tick),
       .i_rx(i_rx),
-      .i_clk(clk_50),
+      .i_clk(sys_clk100),
       .o_rx_data(rx_data),
       .o_rx_done(rx_done)
   );
@@ -47,7 +49,7 @@ module top #(
       .i_tx_data(rx_data),  // envio la misma data que recibo
       .i_tx_start(rx_done),  // cuando termino de recibir, empiezo a enviar
       .i_tick(o_tick),
-      .i_clk(clk_50),
+      .i_clk(sys_clk100),
       .o_tx(o_tx),
       .o_tx_done(tx_done)
   );

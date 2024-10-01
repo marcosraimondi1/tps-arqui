@@ -3,7 +3,7 @@
 module baudRateGen_tb;
 
   // Parametros
-  localparam NCYCLES_PER_TICK = 163;
+  localparam NCYCLES_PER_TICK = 50_000_000 / 19200 / 16;
 
   integer i;  // Contador de iteraciones
   integer j;
@@ -13,7 +13,9 @@ module baudRateGen_tb;
   reg i_reset;
 
   baudRateGen #(
-      .NCYCLES_PER_TICK(NCYCLES_PER_TICK)
+      .BAUD_RATE(19200),
+      .CLK_FREQ(50_000_000),
+      .OVERSAMPLING(16)
   ) baudRateGen1 (
       .i_reset(i_reset),
       .i_clk  (i_clk),
@@ -48,7 +50,7 @@ module baudRateGen_tb;
       end
     end
 
-    $display("Passed BAUDRAYEGEN Test Bench");
+    $display("Passed BAUDRATEGEN Test Bench");
 
     $finish;
   end

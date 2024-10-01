@@ -4,7 +4,6 @@ module uart_tb;
 
   // Parametros
   localparam NB_DATA = 8;
-  localparam NCYCLES_PER_TICK = 163;
 
   // Senales
   integer i;
@@ -20,7 +19,9 @@ module uart_tb;
   reg [NB_DATA-1:0] tx_data;
 
   baudRateGen #(
-      .NCYCLES_PER_TICK(NCYCLES_PER_TICK)
+      .BAUD_RATE(19200),
+      .CLK_FREQ(50_000_000),
+      .OVERSAMPLING(16)
   ) baudRateGen1 (
       .i_reset(i_reset),
       .i_clk  (i_clk),
