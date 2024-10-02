@@ -36,7 +36,7 @@ module uart_interface #(
   reg tx_start, next_tx_start;
   reg opcode_error_flag, next_opcode_error_flag;
 
-  always @(posedge i_clk or posedge i_reset) begin
+  always @(posedge i_clk) begin
     if (i_reset) begin
       state <= IDLE_STATE;
       opcode <= 2'b00;
