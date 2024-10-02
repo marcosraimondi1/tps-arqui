@@ -14,18 +14,20 @@ ser = serial.Serial(
 
 # send bytes of byte list one by one to the serial port 
 for a in range(0, 256):
-    send = bytes([a])
-    ser.write(send)
-    recv = ser.read(1)
+    to_send = bytes([a])
 
-    print(f"{a}. {send}-{recv}")
+    while True:
+        time.sleep(0.1)
+        ser.write(to_send)
+        recv = ser.read(1)
+        print(f"{a}. {to_send}-{recv}")
 
-    # check if the received byte is the same as the sent byte
-    if send != recv:
-        print(f"Error: received {recv} and expected {send}")
-        break
+        # check if the received byte is the same as the sent byte
+        if to_send != recv:
+            print(f"Error: received {recv} and expected {to_send}")
+        else:
+            break
 
-    time.sleep(0.1)
 
 ser.close()
 
