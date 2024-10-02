@@ -29,7 +29,7 @@ module alu #(
       SRA_OP:  res = i_data_A >>> i_data_B;  // aritmetico: el nuevo bit mantiene el signo
       SRL_OP:  res = i_data_A >> i_data_B;  // logico: el nuevo bit es 0
       NOR_OP:  res = ~(i_data_A | i_data_B);
-      default: res = {(NB_DATA) {1'b0}};
+      default: res = 8'ha1;
     endcase
   end
 
