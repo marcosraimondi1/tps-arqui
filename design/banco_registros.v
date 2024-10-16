@@ -3,6 +3,7 @@ module banco_registros #(
     parameter NB_ADDR = 5
 ) (
     input wire i_clk,
+    input wire i_reset,
     input wire i_wr_enable,
     input wire [NB_ADDR-1:0] i_w_addr,
     input wire [NB_REGISTER-1:0] i_w_data,
@@ -15,9 +16,14 @@ module banco_registros #(
   // banco de registros (2**NB_ADDR registros de NB_REGISTER bits cada uno)
   reg [NB_REGISTER-1:0] registers[2**NB_ADDR-1:0];
 
+  integer i;
   // escribo en flanco de bajada del clock
   always @(negedge i_clk) begin
-    if (i_wr_enable) begin
+    if (i_reset) begin
+      for (i = 0; i < 2 ** NB_ADDR; i = i + 1) begin
+        registers[i] <= i;
+      end
+    end else if (i_wr_enable) begin
       registers[i_w_addr] <= i_w_data;
     end
   end
