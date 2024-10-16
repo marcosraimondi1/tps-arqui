@@ -1,13 +1,12 @@
-module unidad_cortocircuito #(
-) (
+module unidad_cortocircuito (
     input wire [4:0] i_rd_MEM,
     input wire [4:0] i_rd_WB,
     input wire [4:0] i_rs_EX,
     input wire [4:0] i_rt_EX,
     input wire i_write_reg_WB,
     input wire i_write_reg_MEM,
-    output reg o_corto_rs[1:0],
-    output reg o_corto_rt[1:0]
+    output reg [1:0] o_corto_rs,
+    output reg [1:0] o_corto_rt
 );
 
   always @(*) begin

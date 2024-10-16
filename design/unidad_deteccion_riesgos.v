@@ -1,5 +1,4 @@
-module unidad_deteccion_riesgos #(
-) (
+module unidad_deteccion_riesgos (
     input wire [4:0] i_rs_ID,
     input wire [4:0] i_rt_ID,
     input wire [4:0] i_rt_EX,
