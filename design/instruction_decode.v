@@ -15,7 +15,7 @@ module instruction_decode #(
     output reg [4:0] o_rt,
     output reg [4:0] o_rd,
     output reg [5:0] o_funct,
-    output reg [15:0] o_inmediato,
+    output reg [31:0] o_inmediato,
     output reg [5:0] o_opcode,
     output reg [25:0] o_addr,  // direccion de jump
     output reg [4:0] o_shamt,
@@ -27,7 +27,12 @@ module instruction_decode #(
     output reg o_MEM_write,  // si 1 escribo en la memoria de datos (STORE)
     output reg o_EX_alu_src,  // si 1 la segunda entrada de la ALU es el inmediato sino RB
     output reg o_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rt sino rd
-    output reg [1:0] o_EX_alu_op  // indica el tipo de operacion (LOAD, STORE, R)
+    output reg [1:0] o_EX_alu_op,  // indica el tipo de operacion (LOAD, STORE, R)
+
+    // resultados de saltos y branches
+    output wire [31:0] o_jump_addr,
+    output reg o_jump
+
 );
 
   wire [31:0] RA_wire;
@@ -36,6 +41,7 @@ module instruction_decode #(
   wire [ 4:0] rs;
   wire [ 4:0] rt;
   wire [ 5:0] opcode;
+  wire [31:0] inmediato;
 
   banco_registros #(
       .NB_REGISTER(32),
@@ -53,6 +59,8 @@ module instruction_decode #(
   );
 
   localparam OPCODE_TIPO_R = 6'b000000;
+  localparam OPCODE_BEQ = 6'b000100;
+  localparam OPCODE_BNE = 6'b000101;
 
   always @(posedge i_clk) begin : senales_WB
     if (opcode == OPCODE_TIPO_R) begin
@@ -115,20 +123,44 @@ module instruction_decode #(
 
   always @(posedge i_clk) begin : instrccion
     // decoficacion de instruccion
-    o_RA_reg <= RA_wire;
-    o_RB_reg <= RB_wire;
+    o_RA_reg <= RA_wire;  // valores del banco de registros
+    o_RB_reg <= RB_wire;  // valores del banco de registros
     o_rs <= rs;
     o_rt <= rt;
     o_opcode <= opcode;
     o_rd <= i_instruction[15:11];
     o_funct <= i_instruction[5:0];
-    o_inmediato <= i_instruction[15:0];
+    o_inmediato <= inmediato;
     o_addr <= i_instruction[25:0];
     o_shamt <= i_instruction[10:6];
+  end
+
+  always @(*) begin : jump_condition
+    case (opcode)
+      OPCODE_BEQ: begin
+        if (RA_wire == RB_wire) begin
+          // se cumple la condicion
+          o_jump = 1'b1;
+        end else begin
+          o_jump = 1'b0;
+        end
+      end
+      OPCODE_BNE: begin
+        if (RA_wire != RB_wire) begin
+          // se cumple la condicion
+          o_jump = 1'b1;
+        end else begin
+          o_jump = 1'b0;
+        end
+      end
+      default: o_jump = 1'b0;
+    endcase
   end
 
   assign rs = i_instruction[25:21];
   assign rt = i_instruction[20:16];
   assign opcode = i_instruction[31:26];
+  assign inmediato = {{16{i_instruction[15]}}, i_instruction[15:0]};  // extension de signo
+  assign o_jump_addr = i_pc4 + (inmediato << 2);
 
 endmodule
