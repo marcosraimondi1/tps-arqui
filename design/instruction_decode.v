@@ -22,12 +22,12 @@ module instruction_decode #(
 
     // senales de control
     output reg o_WB_write,  // si 1 la instruccion escribe en el banco de registros
-    output reg o_WB_mem_to_reg,  // si 0 guardo el valor de ALU sino el valor de MEM (store)
+    output reg o_WB_mem_to_reg,  // si 0 guardo el valor de MEM (load) sino el valor de ALU (tipo R)
     output reg o_MEM_read,  // si 1 leo la memoria de datos (LOAD)
     output reg o_MEM_write,  // si 1 escribo en la memoria de datos (STORE)
     output reg o_EX_alu_src,  // si 1 la segunda entrada de la ALU es el inmediato sino RB
     output reg o_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rt sino rd
-    output reg o_EX_alu_op
+    output reg [1:0] o_EX_alu_op  // indica el tipo de operacion (LOAD, STORE, R)
 );
 
   wire [31:0] RA_wire;
@@ -35,6 +35,7 @@ module instruction_decode #(
 
   wire [ 4:0] rs;
   wire [ 4:0] rt;
+  wire [ 5:0] opcode;
 
   banco_registros #(
       .NB_REGISTER(32),
@@ -51,25 +52,83 @@ module instruction_decode #(
       .o_r_data2(RB_wire)
   );
 
-  // TODO: MANEJAR SENALES DE CONTROL
-  // TODO: MANEJAR SENALES DE CONTROL
-  // TODO: MANEJAR SENALES DE CONTROL
-  // TODO: MANEJAR SENALES DE CONTROL
+  localparam OPCODE_TIPO_R = 6'b000000;
 
-  always @(posedge i_clk) begin
+  always @(posedge i_clk) begin : senales_WB
+    if (opcode == OPCODE_TIPO_R) begin
+      // operacion tipo R
+      o_WB_write <= 1'b1;
+      o_WB_mem_to_reg <= 1'b1;
+    end else if (opcode[5] == 1'b1 && opcode[3] == 1'b0) begin
+      // operacion tipo LOAD
+      o_WB_write <= 1'b1;
+      o_WB_mem_to_reg <= 1'b0;
+    end else begin
+      // otras
+      o_WB_write <= 1'b0;
+      o_WB_mem_to_reg <= o_WB_mem_to_reg;  // no importa el valor
+    end
+  end
+
+  always @(posedge i_clk) begin : senales_MEM
+    if (opcode[5] == 1'b1) begin
+      // operacion tipo LOAD o STORE
+      if (opcode[3] == 1'b1) begin
+        // operacion tipo STORE
+        o_MEM_read  <= 1'b0;
+        o_MEM_write <= 1'b1;
+      end else begin
+        // operacion tipo LOAD
+        o_MEM_read  <= 1'b1;
+        o_MEM_write <= 1'b0;
+      end
+    end else begin
+      // otras
+      o_MEM_read  <= 1'b0;
+      o_MEM_write <= 1'b0;
+    end
+  end
+
+  always @(posedge i_clk) begin : senales_EX
+    if (opcode == OPCODE_TIPO_R) begin
+      o_EX_reg_dst <= 1'b1;
+      o_EX_alu_src <= 1'b0;
+    end else begin
+      o_EX_reg_dst <= 1'b0;
+      o_EX_alu_src <= 1'b1;
+    end
+
+    if (opcode == OPCODE_TIPO_R) begin
+      // operacion tipo R, se usa el funct
+      o_EX_alu_op <= 2'b10;
+    end else if (opcode[5] == 1'b1) begin
+      // se tiene que hacer una suma en la ALU para la direccion
+      o_EX_alu_op <= 2'b00;
+    end else if (opcode[5:3] == 3'b001) begin
+      // inmediatos que se tienen que identificar con el opcode
+      o_EX_alu_op <= 2'b11;
+    end else begin
+      // otro
+      o_EX_alu_op <= 2'b01;
+    end
+  end
+
+  always @(posedge i_clk) begin : instrccion
+    // decoficacion de instruccion
     o_RA_reg <= RA_wire;
     o_RB_reg <= RB_wire;
     o_rs <= rs;
     o_rt <= rt;
+    o_opcode <= opcode;
     o_rd <= i_instruction[15:11];
     o_funct <= i_instruction[5:0];
     o_inmediato <= i_instruction[15:0];
-    o_opcode <= i_instruction[31:26];
     o_addr <= i_instruction[25:0];
     o_shamt <= i_instruction[10:6];
   end
 
   assign rs = i_instruction[25:21];
   assign rt = i_instruction[20:16];
+  assign opcode = i_instruction[31:26];
 
 endmodule
