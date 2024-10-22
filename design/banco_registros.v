@@ -24,7 +24,9 @@ module banco_registros #(
         registers[i] <= i;
       end
     end else if (i_wr_enable) begin
-      registers[i_w_addr] <= i_w_data;
+      if (i_w_addr != 0) begin
+        registers[i_w_addr] <= i_w_data;
+      end
     end
   end
 
