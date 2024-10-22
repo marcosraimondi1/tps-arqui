@@ -5,6 +5,7 @@ module alu #(
     input wire [NB_OP-1 : 0] i_op,
     input wire signed [NB_DATA-1:0] i_data_A,
     input wire signed [NB_DATA-1:0] i_data_B,
+    input wire [4:0] i_shamt,
     output wire signed [NB_DATA-1:0] o_data
 );
 

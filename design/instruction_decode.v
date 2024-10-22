@@ -29,14 +29,12 @@ module instruction_decode #(
     output reg o_MEM_read,  // si 1 leo la memoria de datos (LOAD)
     output reg o_MEM_write,  // si 1 escribo en la memoria de datos (STORE)
     output reg o_EX_alu_src,  // si 1 la segunda entrada de la ALU es el inmediato sino RB
-    output reg o_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rt sino rd
+    output reg o_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rd sino rt
     output reg [1:0] o_EX_alu_op,  // indica el tipo de operacion (LOAD, STORE, R)
 
     // resultados de saltos y branches
     output wire [31:0] o_jump_addr,
     output reg o_jump
-
-
 );
 
   wire [31:0] RA_wire;
@@ -118,10 +116,10 @@ module instruction_decode #(
       o_EX_alu_op  <= 2'b00;
     end else begin
       if (opcode == OPCODE_TIPO_R) begin
-        o_EX_reg_dst <= 1'b1;
+        o_EX_reg_dst <= 1'b1;  // registro destino rd
         o_EX_alu_src <= 1'b0;
       end else begin
-        o_EX_reg_dst <= 1'b0;
+        o_EX_reg_dst <= 1'b0;  // registro de destino rt
         o_EX_alu_src <= 1'b1;
       end
 
@@ -129,6 +127,7 @@ module instruction_decode #(
         // operacion tipo R, se usa el funct
         o_EX_alu_op <= 2'b10;
       end else if (opcode[5] == 1'b1) begin
+        // load o store
         // se tiene que hacer una suma en la ALU para la direccion
         o_EX_alu_op <= 2'b00;
       end else if (opcode[5:3] == 3'b001) begin
