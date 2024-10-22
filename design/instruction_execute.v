@@ -46,7 +46,7 @@ module instruction_execute (
   wire signed [31:0] ALU_result_wire;
 
   localparam ADD_OP = 6'b100000;
-  localparam IDLE_OP = 6'b000000;
+  localparam IDLE_OP = 6'b111111;
 
   always @(*) begin : alu_control
     case (i_EX_alu_op)
