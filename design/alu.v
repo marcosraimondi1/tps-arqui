@@ -6,7 +6,7 @@ module alu #(
     input wire signed [NB_DATA-1:0] i_data_A,
     input wire signed [NB_DATA-1:0] i_data_B,
     input wire [4:0] i_shamt,
-    output wire signed [NB_DATA-1:0] o_data
+    output wire [NB_DATA-1:0] o_data
 );
 
   localparam IDLE_OP = 6'b111111;
@@ -35,8 +35,14 @@ module alu #(
   localparam SLTI_OP = 6'b001010;
 
   reg signed [NB_DATA-1:0] res;
+  reg unsigned [NB_DATA-1:0] res_u;
+  wire unsigned [NB_DATA-1:0] data_A_u;
+  wire unsigned [NB_DATA-1:0] data_B_u;
+  wire is_unsigned;
 
   always @(*) begin : alu
+    res   = 0;
+    res_u = 0;
     case (i_op)
       IDLE_OP: res = {NB_DATA{1'b0}};
       ADD_OP:  res = i_data_A + i_data_B;
@@ -47,8 +53,8 @@ module alu #(
       SLLV_OP: res = i_data_B << i_data_A;
       SRLV_OP: res = i_data_B >> i_data_A;
       SRAV_OP: res = i_data_B >>> i_data_A;
-      ADDU_OP: res = i_data_A + i_data_B;
-      SUBU_OP: res = i_data_A - i_data_B;
+      ADDU_OP: res_u = data_A_u + i_data_B_u;
+      SUBU_OP: res_u = i_data_A_u - i_data_B_u;
       AND_OP:  res = i_data_A & i_data_B;
       OR_OP:   res = i_data_A | i_data_B;
       XOR_OP:  res = i_data_A ^ i_data_B;
@@ -64,6 +70,9 @@ module alu #(
     endcase
   end
 
-  assign o_data = res;
+  assign o_data = is_unsigned ? res_u : res;
+  assign data_A_u = i_data_A;
+  assign data_B_u = i_data_B;
+  assign is_unsigned = (i_op == ADDU_OP) || (i_op == SUBU_OP);
 
 endmodule
