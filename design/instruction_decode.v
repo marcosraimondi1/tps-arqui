@@ -30,6 +30,8 @@ module instruction_decode (
     output reg o_EX_alu_src,  // si 1 la segunda entrada de la ALU es el inmediato sino RB
     output reg o_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rd sino rt
     output reg [1:0] o_EX_alu_op,  // indica el tipo de operacion (LOAD, STORE, R)
+    output reg o_MEM_unsigned,  // 1 unsigned 0 signed
+    output reg [1:0] o_MEM_byte_half_word,  // 00 byte, 01 half word, 11 word
 
     // resultados de saltos y branches
     output wire [31:0] o_jump_addr,
@@ -86,11 +88,15 @@ module instruction_decode (
 
   always @(posedge i_clk) begin : senales_MEM
     if (i_stall) begin
-      o_MEM_read  <= 1'b0;
+      o_MEM_read <= 1'b0;
       o_MEM_write <= 1'b0;
+      o_MEM_unsigned <= 1'b0;  // 1 unsigned 0 signed
+      o_MEM_byte_half_word <= 2'b00;  // 00 byte, 01 half word, 11 word
     end else begin
       if (opcode[5] == 1'b1) begin
         // operacion tipo LOAD o STORE
+        o_MEM_unsigned <= opcode[2];  // 1 unsigned 0 signed
+        o_MEM_byte_half_word <= opcode[1:0];  // 00 byte, 01 half word, 11 word
         if (opcode[3] == 1'b1) begin
           // operacion tipo STORE
           o_MEM_read  <= 1'b0;

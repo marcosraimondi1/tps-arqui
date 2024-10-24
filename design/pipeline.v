@@ -49,6 +49,8 @@ module pipeline (
   wire WB_mem_to_reg__out_decode;
   wire MEM_read__out_decode;
   wire MEM_write__out_decode;
+  wire MEM_unsigned__out_decode;
+  wire [1:0] MEM_byte_half_word__out_decode;
   wire EX_alu_src__out_decode;
   wire EX_reg_dst__out_decode;
   wire [1:0] EX_alu_op__out_decode;
@@ -78,6 +80,8 @@ module pipeline (
       .o_WB_mem_to_reg(WB_mem_to_reg__out_decode),
       .o_MEM_read(MEM_read__out_decode),
       .o_MEM_write(MEM_write__out_decode),
+      .o_MEM_unsigned(MEM_write__out_decode),
+      .o_MEM_byte_half_word(MEM_byte_half_word__out_decode),
       .o_EX_alu_src(EX_alu_src__out_decode),
       .o_EX_reg_dst(EX_reg_dst__out_decode),
       .o_EX_alu_op(EX_alu_op__out_decode),
@@ -93,6 +97,8 @@ module pipeline (
   wire WB_mem_to_reg__out_execute;
   wire MEM_read__out_execute;
   wire MEM_write__out_execute;
+  wire MEM_unsigned__out_execute;
+  wire [1:0] MEM_byte_half_word__out_execute;
 
   // cortocircuito
   wire [1:0] corto_rs;
@@ -122,6 +128,8 @@ module pipeline (
       .i_WB_mem_to_reg(WB_mem_to_reg__out_decode),
       .i_MEM_read(MEM_read__out_decode),
       .i_MEM_write(MEM_write__out_decode),
+      .i_MEM_unsigned(MEM_write__out_decode),
+      .i_MEM_byte_half_word(MEM_byte_half_word__out_decode),
       .i_EX_alu_src(EX_alu_src__out_decode),
       .i_EX_reg_dst(EX_reg_dst__out_decode),
       .i_EX_alu_op(EX_alu_op__out_decode),
@@ -137,6 +145,8 @@ module pipeline (
       .o_WB_mem_to_reg(WB_mem_to_reg__out_execute),
       .o_MEM_read(MEM_read__out_execute),
       .o_MEM_write(MEM_write__out_execute),
+      .o_MEM_unsigned(MEM_write__out_execute),
+      .o_MEM_byte_half_word(MEM_byte_half_word__out_execute),
 
       // salidas
       .o_write_reg(write_reg__out_execute),
@@ -166,6 +176,8 @@ module pipeline (
       .i_WB_mem_to_reg(WB_mem_to_reg__out_execute),
       .i_MEM_read(MEM_read__out_execute),
       .i_MEM_write(MEM_write__out_execute),
+      .i_MEM_unsigned(MEM_write__out_execute),
+      .i_MEM_byte_half_word(MEM_byte_half_word__out_execute),
 
       // senales de control (output)
       .o_WB_write(WB_write__out_mem),

@@ -17,6 +17,8 @@ module instruction_execute (
     input wire i_WB_mem_to_reg,  // si 0 guardo el valor de MEM (load) sino el valor de ALU (tipo R)
     input wire i_MEM_read,  // si 1 leo la memoria de datos (LOAD)
     input wire i_MEM_write,  // si 1 escribo en la memoria de datos (STORE)
+    input wire i_MEM_unsigned,  // 1 unsigned 0 signed
+    input wire [1:0] i_MEM_byte_half_word,  // 00 byte, 01 half word, 11 word
     input wire i_EX_alu_src,  // si 1 la segunda entrada de la ALU es el inmediato sino RB
     input wire i_EX_reg_dst,  // si 1 el destino (el registro que se escribe) rd sino rt
     input wire [1:0] i_EX_alu_op,  // indica el tipo de operacion (LOAD, STORE, R)
@@ -32,6 +34,8 @@ module instruction_execute (
     output reg o_WB_mem_to_reg,  // si 0 guardo el valor de MEM (load) sino el valor de ALU (tipo R)
     output reg o_MEM_read,  // si 1 leo la memoria de datos (LOAD)
     output reg o_MEM_write,  // si 1 escribo en la memoria de datos (STORE)
+    output reg o_MEM_unsigned,  // 1 unsigned 0 signed
+    output reg [1:0] o_MEM_byte_half_word,  // 00 byte, 01 half word, 11 word
 
     // salidas
     output reg [4:0] o_write_reg,  // registro de destino donde se escriben los resultados en WB
@@ -111,11 +115,15 @@ module instruction_execute (
       o_WB_mem_to_reg <= 1'b0;
       o_MEM_read <= 1'b0;
       o_MEM_write <= 1'b0;
+      o_MEM_unsigned <= 1'b0;
+      o_MEM_byte_half_word <= 2'b00;
     end else begin
       o_WB_write <= i_WB_write;
       o_WB_mem_to_reg <= i_WB_mem_to_reg;
       o_MEM_read <= i_MEM_read;
       o_MEM_write <= i_MEM_write;
+      o_MEM_unsigned <= i_MEM_unsigned;
+      o_MEM_byte_half_word <= i_MEM_byte_half_word;
     end
   end
 
