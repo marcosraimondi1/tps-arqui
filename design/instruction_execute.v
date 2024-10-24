@@ -145,7 +145,7 @@ module instruction_execute (
       .i_data_A(ALU_data_A),
       .i_data_B(ALU_data_B),
       .i_shamt(i_shamt),
-      .o_data()
+      .o_data(ALU_result_wire)
   );
 
 endmodule
