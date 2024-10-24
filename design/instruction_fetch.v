@@ -1,5 +1,4 @@
-module instruction_fetch #(
-) (
+module instruction_fetch (
     input wire i_clk,
     input wire i_reset,
     input wire i_write_instruction_mem,
@@ -50,6 +49,6 @@ module instruction_fetch #(
     end
   end
 
-  assign instruction_addr = i_write_instruction ? i_instruction_mem_addr : pc;
+  assign instruction_addr = i_write_instruction_mem ? i_instruction_mem_addr : pc;
 
 endmodule

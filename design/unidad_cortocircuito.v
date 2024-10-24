@@ -3,8 +3,8 @@ module unidad_cortocircuito (
     input wire [4:0] i_rd_WB,
     input wire [4:0] i_rs_EX,
     input wire [4:0] i_rt_EX,
-    input wire i_write_reg_WB,
-    input wire i_write_reg_MEM,
+    input wire i_write_reg_WB,  // si la instruccion en WB escribe un registro
+    input wire i_write_reg_MEM,  // si la instruccion en MEM escribe un registro
     output reg [1:0] o_corto_rs,
     output reg [1:0] o_corto_rt
 );

@@ -1,5 +1,4 @@
-module instruction_decode #(
-) (
+module instruction_decode (
     input wire i_clk,
     input wire i_reset,
     input wire [31:0] i_pc4,
@@ -20,7 +19,7 @@ module instruction_decode #(
     output reg [5:0] o_funct,
     output reg [31:0] o_inmediato,
     output reg [5:0] o_opcode,
-    output reg [25:0] o_addr,  // direccion de jump
+    output reg [25:0] o_addr,  // direccion de jump incondicional
     output reg [4:0] o_shamt,
 
     // senales de control
@@ -142,8 +141,8 @@ module instruction_decode #(
 
   always @(posedge i_clk) begin : instrccion
     // decoficacion de instruccion
-    o_RA_reg <= RA_wire;  // valores del banco de registros
-    o_RB_reg <= RB_wire;  // valores del banco de registros
+    o_RA <= RA_wire;  // valores del banco de registros
+    o_RB <= RB_wire;  // valores del banco de registros
     o_rs <= rs;
     o_rt <= rt;
     o_opcode <= opcode;
