@@ -23,7 +23,7 @@ module uart_rx #(
   reg rx_done;
 
   // State manager
-  always @(posedge i_clk) begin
+  always @(posedge i_clk, posedge i_reset) begin
     if (i_reset) begin
       state <= IDLE_STATE;
       tick_count <= 0;
