@@ -2,7 +2,7 @@
 
 ## Clock
 set_property -dict { PACKAGE_PIN W5 IOSTANDARD LVCMOS33 } [get_ports { sys_clk100 }];
-create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { sys_clk100 }]; # 100 MHz
+# create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { sys_clk100 }]; # 100 MHz
 
 ## Reset
 set_property -dict { PACKAGE_PIN T18 IOSTANDARD LVCMOS33 } [get_ports { i_reset }];

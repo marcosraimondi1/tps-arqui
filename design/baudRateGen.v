@@ -7,7 +7,8 @@ module baudRateGen #(
     input  wire i_reset,
     output wire o_tick
 );
-  localparam NCYCLES_PER_TICK = CLK_FREQ / BAUD_RATE / OVERSAMPLING;
+  // CLK_FREQ / BAUD_RATE / OVERSAMPLING
+  localparam NCYCLES_PER_TICK = 163;
   localparam NB_COUNTER = clogb2(NCYCLES_PER_TICK - 1);
 
   reg [NB_COUNTER-1:0] counter;
