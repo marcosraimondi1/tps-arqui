@@ -25,6 +25,7 @@ module etapa_mem (
 );
 
   wire [31:0] read_data_wire;
+  reg [31:0] data_to_MEM;
 
   localparam BYTE = 2'b00;
   localparam HALF_WORD = 2'b01;
@@ -81,7 +82,7 @@ module etapa_mem (
       .o_data(read_data_wire)
   );
 
-  reg [31:0] data_to_MEM;
+
   always @(*) begin : data_to_mem_mask
     case (i_MEM_byte_half_word)
       BYTE: begin

@@ -35,9 +35,9 @@ module alu #(
   localparam SLTI_OP = 6'b001010;
 
   reg signed [NB_DATA-1:0] res;
-  reg unsigned [NB_DATA-1:0] res_u;
-  wire unsigned [NB_DATA-1:0] data_A_u;
-  wire unsigned [NB_DATA-1:0] data_B_u;
+  reg [NB_DATA-1:0] res_u;
+  wire [NB_DATA-1:0] data_A_u;
+  wire [NB_DATA-1:0] data_B_u;
   wire is_unsigned;
 
   always @(*) begin : alu
@@ -53,8 +53,8 @@ module alu #(
       SLLV_OP: res = i_data_B << i_data_A;
       SRLV_OP: res = i_data_B >> i_data_A;
       SRAV_OP: res = i_data_B >>> i_data_A;
-      ADDU_OP: res_u = data_A_u + i_data_B_u;
-      SUBU_OP: res_u = i_data_A_u - i_data_B_u;
+      ADDU_OP: res_u = data_A_u + data_B_u;
+      SUBU_OP: res_u = data_A_u - data_B_u;
       AND_OP:  res = i_data_A & i_data_B;
       OR_OP:   res = i_data_A | i_data_B;
       XOR_OP:  res = i_data_A ^ i_data_B;
