@@ -6,7 +6,7 @@ module xilinx_one_port_ram_async #(
     input wire i_write_enable,
     input wire [ADDR_WIDTH-1:0] i_addr,
     input wire [DATA_WIDTH*4-1:0] i_data,
-    output wire [DATA_WIDTH-1:0] o_data
+    output wire [DATA_WIDTH*4-1:0] o_data
 );
 
   // memoria de 2**ADDR_WIDTH x DATA_WITH bits
