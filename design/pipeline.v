@@ -120,7 +120,6 @@ module pipeline (
       .i_funct(funct),
       .i_inmediato(inmediato),
       .i_opcode(opcode),
-      .i_addr(),  // direccion de jump
       .i_shamt(shamt),
 
       // senales de control
@@ -128,7 +127,7 @@ module pipeline (
       .i_WB_mem_to_reg(WB_mem_to_reg__out_decode),
       .i_MEM_read(MEM_read__out_decode),
       .i_MEM_write(MEM_write__out_decode),
-      .i_MEM_unsigned(MEM_write__out_decode),
+      .i_MEM_unsigned(MEM_unsigned__out_execute),
       .i_MEM_byte_half_word(MEM_byte_half_word__out_decode),
       .i_EX_alu_src(EX_alu_src__out_decode),
       .i_EX_reg_dst(EX_reg_dst__out_decode),

@@ -8,12 +8,11 @@ module instruction_fetch (
     input wire [31:0] i_jump_addr,
     input wire i_stall,
     input wire i_halt,
-    output wire [31:0] o_instruction,
+    output reg [31:0] o_instruction,
     output wire [31:0] o_pc4
 );
 
   wire [31:0] pc;
-  reg  [31:0] instruction;
   wire [31:0] instruction_from_mem;
   wire [31:0] instruction_addr;
 
@@ -41,10 +40,10 @@ module instruction_fetch (
 
   always @(posedge i_clk) begin
     if (i_reset) begin
-      instruction <= 32'h00000000;
+      o_instruction <= 32'h00000000;
     end else begin
-      if (!i_stall) begin
-        instruction <= instruction_from_mem;
+      if (!i_stall && !i_halt) begin
+        o_instruction <= instruction_from_mem;
       end
     end
   end

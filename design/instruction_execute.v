@@ -9,7 +9,6 @@ module instruction_execute (
     input wire [5:0] i_funct,
     input wire [31:0] i_inmediato,
     input wire [5:0] i_opcode,
-    input wire [25:0] i_addr,  // direccion de jump
     input wire [4:0] i_shamt,
 
     // senales de control
