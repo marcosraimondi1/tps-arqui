@@ -1,10 +1,24 @@
-module pipeline (
+module pipeline #(
+    parameter NB_IF_ID  = 64,
+    parameter NB_ID_EX  = 139,
+    parameter NB_EX_MEM = 76,
+    parameter NB_MEM_WB = 71
+) (
     input wire i_clk,
     input wire i_reset,
     input wire i_halt,
     input wire i_write_instruction_mem,  // flag para escribir memoria de instrucciones
     input wire [31:0] i_instruction_mem_addr,  // direccion de memoria de instrucciones
-    input wire [31:0] i_instruction_mem_data  // dato a escribir en memoria de instrucciones
+    input wire [31:0] i_instruction_mem_data,  // dato a escribir en memoria de instrucciones
+
+    input wire [4:0] i_r_addr_registers,
+    input wire [4:0] i_r_addr_data_mem,
+    output wire [31:0] o_r_data_registers,
+    output wire [31:0] o_r_data_data_mem,
+    output wire [NB_IF_ID-1:0] o_IF_ID,
+    output wire [NB_ID_EX-1:0] o_ID_EX,
+    output wire [NB_EX_MEM-1:0] o_EX_MEM,
+    output wire [NB_MEM_WB-1:0] o_MEM_WB
 );
 
   wire jump_flag;
@@ -30,6 +44,8 @@ module pipeline (
       .o_instruction(instruction),
       .o_pc4(pc4)
   );
+
+  assign o_IF_ID = {instruction, pc4};
 
   // senales del writeback al decode
   wire write_enable_WB;
@@ -93,8 +109,32 @@ module pipeline (
       .o_jump_addr(jump_addr),
       .o_jump(jump_flag),
 
-      .o_halt(halt_from_instruction)
+      .o_halt(halt_from_instruction),
+
+      .i_r_addr(i_r_addr_registers),
+      .o_r_data(o_r_data_registers)
   );
+
+  assign o_ID_EX = {
+    RA,  // 32 bits
+    RB,  // 32 bits
+    rs,  // 5 bits
+    rt,  // 5 bits
+    rd,  // 5 bits
+    funct,  // 6 bits
+    inmediato,  // 32 bits
+    opcode,  // 6 bits
+    shamt,  // 5 bits
+    WB_write__out_decode,  // 1 bit
+    WB_mem_to_reg__out_decode,  // 1 bit
+    MEM_read__out_decode,  // 1 bit
+    MEM_write__out_decode,  // 1 bit
+    MEM_unsigned__out_decode,  // 1 bit
+    MEM_byte_half_word__out_decode,  // 2 bits
+    EX_alu_src__out_decode,  // 1 bit
+    EX_reg_dst__out_decode,  // 1 bit
+    EX_alu_op__out_decode  // 2 bits
+  };  // total 139 bits
 
 
   // senales de control
@@ -133,7 +173,7 @@ module pipeline (
       .i_WB_mem_to_reg(WB_mem_to_reg__out_decode),
       .i_MEM_read(MEM_read__out_decode),
       .i_MEM_write(MEM_write__out_decode),
-      .i_MEM_unsigned(MEM_unsigned__out_execute),
+      .i_MEM_unsigned(MEM_unsigned__out_decode),
       .i_MEM_byte_half_word(MEM_byte_half_word__out_decode),
       .i_EX_alu_src(EX_alu_src__out_decode),
       .i_EX_reg_dst(EX_reg_dst__out_decode),
@@ -150,7 +190,7 @@ module pipeline (
       .o_WB_mem_to_reg(WB_mem_to_reg__out_execute),
       .o_MEM_read(MEM_read__out_execute),
       .o_MEM_write(MEM_write__out_execute),
-      .o_MEM_unsigned(MEM_write__out_execute),
+      .o_MEM_unsigned(MEM_unsigned__out_execute),
       .o_MEM_byte_half_word(MEM_byte_half_word__out_execute),
 
       // salidas
@@ -158,6 +198,18 @@ module pipeline (
       .o_data_to_write_in_MEM(data_to_write_in_MEM),
       .o_ALU_result(ALU_result__out_execute)
   );
+
+  assign o_EX_MEM = {
+    WB_write__out_execute,
+    WB_mem_to_reg__out_execute,
+    MEM_read__out_execute,
+    MEM_write__out_execute,
+    MEM_unsigned__out_execute,
+    MEM_byte_half_word__out_execute,
+    write_reg__out_execute,
+    data_to_write_in_MEM,
+    ALU_result__out_execute
+  };  // total 76 bits
 
   // senales de control
   wire WB_write__out_mem;
@@ -182,7 +234,7 @@ module pipeline (
       .i_WB_mem_to_reg(WB_mem_to_reg__out_execute),
       .i_MEM_read(MEM_read__out_execute),
       .i_MEM_write(MEM_write__out_execute),
-      .i_MEM_unsigned(MEM_write__out_execute),
+      .i_MEM_unsigned(MEM_unsigned__out_execute),
       .i_MEM_byte_half_word(MEM_byte_half_word__out_execute),
 
       // senales de control (output)
@@ -192,8 +244,20 @@ module pipeline (
       // salidas de la etapa
       .o_ALU_result(ALU_result__out_mem),
       .o_read_data (read_data_from_mem),
-      .o_write_reg (write_reg__out_mem)
+      .o_write_reg (write_reg__out_mem),
+
+      // debug unit
+      .i_r_addr(i_r_addr_data_mem),
+      .o_r_data(o_r_data_data_mem)
   );
+
+  assign o_MEM_WB = {
+    WB_write__out_mem,
+    WB_mem_to_reg__out_mem,
+    ALU_result__out_mem,
+    read_data_from_mem,
+    write_reg__out_mem
+  };  // total 71 bits
 
   etapa_wb etapa_wb1 (
       .i_write_reg (write_reg__out_mem),

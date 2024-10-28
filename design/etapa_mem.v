@@ -22,7 +22,11 @@ module etapa_mem (
     // salidas de la etapa
     output reg [31:0] o_ALU_result,  // resultado de la ALU
     output reg [31:0] o_read_data,   // data leida de memoria
-    output reg [ 4:0] o_write_reg    // registro de destino donde se escriben los resultados en WB
+    output reg [ 4:0] o_write_reg,   // registro de destino donde se escriben los resultados en WB
+
+    // debug unit
+    input  wire [31:0] i_r_addr,
+    output wire [31:0] o_r_data
 );
 
   wire [31:0] read_data_wire;
@@ -78,13 +82,15 @@ module etapa_mem (
     end
   end
 
+  wire [31:0] mem_addr;
+
   xilinx_one_port_ram_async #(
       .ADDR_WIDTH(12),  // 4K direcciones
       .DATA_WIDTH(8)    // 8 bit data en ram
   ) mem (
       .i_clk(i_clk),
       .i_write_enable(i_MEM_write),
-      .i_addr(i_ALU_result[11:0]),
+      .i_addr(mem_addr),
       .i_data(data_to_MEM),
       .o_data(read_data_wire)
   );
@@ -111,5 +117,8 @@ module etapa_mem (
     endcase
   end
 
+
+  assign mem_addr = i_halt ? i_r_addr : i_ALU_result[11:0];
+  assign o_r_data = read_data_wire;
 
 endmodule

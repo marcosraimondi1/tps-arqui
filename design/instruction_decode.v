@@ -38,7 +38,12 @@ module instruction_decode (
     // resultados de saltos y branches
     output reg [31:0] o_jump_addr,
     output reg o_jump,
-    output wire o_halt
+    output wire o_halt,
+
+    // para debug unit
+    input  wire [ 4:0] i_r_addr,
+    output wire [31:0] o_r_data
+
 );
 
   wire [31:0] RA_wire;
@@ -50,6 +55,8 @@ module instruction_decode (
   wire [ 5:0] opcode;
   wire [31:0] inmediato;
 
+  wire [ 4:0] reg_rs_to_read;
+
   banco_registros #(
       .NB_REGISTER(32),
       .NB_ADDR(5)
@@ -59,7 +66,7 @@ module instruction_decode (
       .i_wr_enable(i_write_enable_WB),
       .i_w_addr(i_register_WB),
       .i_w_data(i_data_WB),
-      .i_r_addr1(rs),
+      .i_r_addr1(reg_rs_to_read),
       .i_r_addr2(rt),
       .o_r_data1(RA_wire),
       .o_r_data2(RB_wire)
@@ -278,5 +285,8 @@ module instruction_decode (
   assign inmediato = {{16{i_instruction[15]}}, i_instruction[15:0]};  // extension de signo
   assign o_halt = (i_instruction == HALT);
   assign funct_wire = i_instruction[5:0];
+
+  assign o_r_data = RA_wire;
+  assign reg_rs_to_read = i_halt ? i_r_addr : rs;
 
 endmodule
