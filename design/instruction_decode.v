@@ -84,7 +84,7 @@ module instruction_decode (
       end else begin
         if (opcode == OPCODE_TIPO_R || opcode == OPCODE_JAL) begin
           // operacion tipo R
-          if (funct_wire == FUNCT_JR) begin
+          if (funct_wire == FUNCT_JR) begin  // JR no escribe en los registros
             o_WB_write <= 1'b0;
             o_WB_mem_to_reg <= 1'b0;
           end else begin
@@ -163,15 +163,23 @@ module instruction_decode (
         end
 
         if (opcode == OPCODE_TIPO_R) begin
-          // operacion tipo R, se usa el funct
-          o_EX_alu_op <= 2'b10;
+          if (funct_wire == FUNCT_JALR) begin
+            // operacion de JALR, 00 para que haga la suma de pc4 + 4
+            o_EX_alu_op <= 2'b00;
+          end else begin
+            // operacion tipo R, se usa el funct
+            o_EX_alu_op <= 2'b10;
+          end
         end else if (opcode[5] == 1'b1) begin
           // load o store
           // se tiene que hacer una suma en la ALU para la direccion
           o_EX_alu_op <= 2'b00;
-        end else if (opcode[5:3] == 3'b001 || opcode == OPCODE_JAL) begin
+        end else if (opcode[5:3] == 3'b001) begin
           // inmediatos que se tienen que identificar con el opcode
           o_EX_alu_op <= 2'b11;
+        end else if (opcode == OPCODE_JAL) begin
+          // operacion de JALR, 00 para que haga la suma de pc4 + 4
+          o_EX_alu_op <= 2'b00;
         end else begin
           // otro
           o_EX_alu_op <= 2'b01;
@@ -197,11 +205,13 @@ module instruction_decode (
         // en RA va la direccion de retorno a la que hay que sumarle 4
         o_RA <= i_pc4;
         o_rs <= 0;  // para que no haya cortocircuito
+        // en RB va 4
+        o_RB <= 4;
       end else begin
         o_RA <= RA_wire;  // valores del banco de registros
         o_rs <= rs;
+        o_RB <= RB_wire;  // valores del banco de registros
       end
-      o_RB <= RB_wire;  // valores del banco de registros
 
       if (opcode == OPCODE_JAL) begin
         o_rt <= 5'b11111;  // registro 31

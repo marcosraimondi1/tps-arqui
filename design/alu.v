@@ -25,17 +25,17 @@ module alu #(
   localparam XOR_OP = 6'b100110;
   localparam NOR_OP = 6'b100111;
   localparam SLT_OP = 6'b101010;
+  localparam SLTU_OP = 6'b101011;
 
   // inmediatas
   localparam ADDI_OP = 6'b001000;
+  localparam ADDIU_OP = 6'b001001;
   localparam ANDI_OP = 6'b001100;
   localparam ORI_OP = 6'b001101;
   localparam XORI_OP = 6'b001110;
   localparam LUI_OP = 6'b001111;
   localparam SLTI_OP = 6'b001010;
-
-  // jumps (la direccion de retorno viene en RA)
-  localparam JALR_OP = 6'b001001;  // return = pc4 + 4
+  localparam SLTIU_OP = 6'b001011;
 
   reg signed [NB_DATA-1:0] res;
   reg [NB_DATA-1:0] res_u;
@@ -48,28 +48,30 @@ module alu #(
     res_u = 0;
     case (i_op)
       IDLE_OP: res = {NB_DATA{1'b0}};
-      ADD_OP:  res = i_data_A + i_data_B;
-      SUB_OP:  res = i_data_A - i_data_B;
-      SLL_OP:  res = i_data_B << i_shamt;
-      SRL_OP:  res = i_data_B >> i_shamt;
-      SRA_OP:  res = i_data_B >>> i_shamt;
+      ADD_OP: res = i_data_A + i_data_B;
+      SUB_OP: res = i_data_A - i_data_B;
+      SLL_OP: res = i_data_B << i_shamt;
+      SRL_OP: res = i_data_B >> i_shamt;
+      SRA_OP: res = i_data_B >>> i_shamt;
       SLLV_OP: res = i_data_B << i_data_A;
       SRLV_OP: res = i_data_B >> i_data_A;
       SRAV_OP: res = i_data_B >>> i_data_A;
       ADDU_OP: res_u = data_A_u + data_B_u;
       SUBU_OP: res_u = data_A_u - data_B_u;
-      AND_OP:  res = i_data_A & i_data_B;
-      OR_OP:   res = i_data_A | i_data_B;
-      XOR_OP:  res = i_data_A ^ i_data_B;
-      NOR_OP:  res = ~(i_data_A | i_data_B);
-      SLT_OP:  res = (i_data_A < i_data_B) ? 1 : 0;
+      AND_OP: res = i_data_A & i_data_B;
+      OR_OP: res = i_data_A | i_data_B;
+      XOR_OP: res = i_data_A ^ i_data_B;
+      NOR_OP: res = ~(i_data_A | i_data_B);
+      SLT_OP: res = (i_data_A < i_data_B) ? 1 : 0;
+      SLTU_OP: res_u = (data_A_u < data_B_u) ? 1 : 0;
       ADDI_OP: res = i_data_A + i_data_B;
+      ADDIU_OP: res_u = data_A_u + data_B_u;
       ANDI_OP: res = i_data_A & i_data_B;
-      ORI_OP:  res = i_data_A | i_data_B;
+      ORI_OP: res = i_data_A | i_data_B;
       XORI_OP: res = i_data_A ^ i_data_B;
-      LUI_OP:  res = i_data_B << 16;
+      LUI_OP: res = i_data_B << 16;
       SLTI_OP: res = (i_data_A < i_data_B) ? 1 : 0;
-      JALR_OP: res = i_data_A + 4;
+      SLTIU_OP: res_u = (data_A_u < data_B_u) ? 1 : 0;
       default: res = {{(NB_DATA - 8) {1'b0}}, {8'ha1}};
     endcase
   end
@@ -77,6 +79,7 @@ module alu #(
   assign o_data = is_unsigned ? res_u : res;
   assign data_A_u = i_data_A;
   assign data_B_u = i_data_B;
-  assign is_unsigned = (i_op == ADDU_OP) || (i_op == SUBU_OP);
+  assign is_unsigned = (i_op == ADDU_OP) || (i_op == SUBU_OP) || (i_op == SLTU_OP)
+                        || (i_op == SLTIU_OP) || (i_op == ADDIU_OP);
 
 endmodule

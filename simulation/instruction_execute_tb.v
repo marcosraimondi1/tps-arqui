@@ -239,14 +239,14 @@ module instruction_execute_tb;
     rt = RT;
     rd = RD - 1;
     RA = 32'd4;
-    RB = 32'd0 + RT;
+    RB = 32'd4;
     opcode = JALR[31:26];
     funct = JALR[5:0];
     inmediato = 32'd0 + JALR[15:0];
     corto_rs = 2'b00;
     corto_rt = 2'b00;
     EX_alu_src__out_decode = 0;  // uso RB no inmediato
-    EX_alu_op__out_decode = 2'b10;  // tipo R
+    EX_alu_op__out_decode = 2'b00;  // para que haga suma
     EX_reg_dst__out_decode = 1;  // uso rd no rt
 
     #20;
@@ -260,14 +260,14 @@ module instruction_execute_tb;
     rt = 5'b11111;
     rd = 5'd5;
     RA = 32'd8;
-    RB = 32'd0 + RT;
+    RB = 32'd4;
     opcode = JAL[31:26];
     funct = JAL[5:0];
     inmediato = 32'd0 + JAL[15:0];
     corto_rs = 2'b00;
     corto_rt = 2'b00;
     EX_alu_src__out_decode = 0;  // uso RB no inmediato
-    EX_alu_op__out_decode = 2'b11;  // tipo I
+    EX_alu_op__out_decode = 2'b00;  // para que haga suma
     EX_reg_dst__out_decode = 0;  // uso rt no rd
 
     #20;

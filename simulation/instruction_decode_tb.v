@@ -42,9 +42,9 @@ module instruction_decode_tb ();
   localparam SLTI = {6'b001010, RS, RT, INMEDIATO};
   localparam BEQ = {6'b000100, RS, RT, INMEDIATO};
   localparam BNE = {6'b000101, RS, RT, INMEDIATO};
-  // tipo J
   localparam J = {6'b000010, JUMP_ADDR};
   localparam JAL = {6'b000011, JUMP_ADDR};
+  // tipo J
   localparam JR = {6'b000000, RS, 15'b000000000000000, 6'b001000};
   localparam JALR = {6'b000000, RS, 5'b00000, RD, 5'b00000, 6'b001001};
   localparam HALT = 32'hffffffff;
@@ -316,12 +316,15 @@ module instruction_decode_tb ();
     #10;
     if (opcode !== 6'b000011) $fatal("opcode = %d", opcode);
     if (RA !== pc4) $fatal("RA = %d", RA);
+    if (RB !== 32'd4) $fatal("RB = %d", RB);
     if (rt !== 5'd31) $fatal("rt = %d", rt);
     // senales de control
     if (!WB_write__out_decode) $fatal("WB_write = %d", WB_write__out_decode);
     if (!WB_mem_to_reg__out_decode) $fatal("WB_mem_to_reg = %d", WB_mem_to_reg__out_decode);
     if (MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
     if (EX_reg_dst__out_decode) $fatal("EX_reg_dst = %d", EX_reg_dst__out_decode);  // 1 -> rd
+    if (EX_alu_op__out_decode !== 2'b00)
+      $fatal("EX_alu_op = %d", EX_alu_op__out_decode);  // 00 -> Load o Store
 
     $display("JALR");
     instruction = JALR;
@@ -332,12 +335,15 @@ module instruction_decode_tb ();
     if (opcode !== 6'b000000) $fatal("opcode = %d", opcode);
     if (funct !== 6'b001001) $fatal("funct = %d", funct);
     if (RA !== pc4) $fatal("RA = %d", RA);
+    if (RB !== 32'd4) $fatal("RB = %d", RB);
     if (rd !== RD) $fatal("rd = %d", rd);
     // senales de control
     if (!WB_write__out_decode) $fatal("WB_write = %d", WB_write__out_decode);
     if (!WB_mem_to_reg__out_decode) $fatal("WB_mem_to_reg = %d", WB_mem_to_reg__out_decode);
     if (MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
     if (!EX_reg_dst__out_decode) $fatal("EX_reg_dst = %d", EX_reg_dst__out_decode);  // 1 -> rd
+    if (EX_alu_op__out_decode !== 2'b00)
+      $fatal("EX_alu_op = %d", EX_alu_op__out_decode);  // 00 -> Load o Store
 
     // test saltos condicionales
     $display("BNE");  // se cumple la condicion, deberia haber salto
