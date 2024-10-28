@@ -51,6 +51,7 @@ module instruction_execute_tb;
 
   reg i_clk;
   reg i_reset;
+  reg i_halt;
   reg [31:0] RA;
   reg [31:0] RB;
   reg [4:0] rs;
@@ -89,6 +90,7 @@ module instruction_execute_tb;
   instruction_execute intstruction_execute1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
+      .i_halt(i_halt),
       .i_RA(RA),
       .i_RB(RB),
       .i_rs(rs),
@@ -124,6 +126,7 @@ module instruction_execute_tb;
 
   initial begin
 
+    i_halt = 0;
     i_clk = 0;
     i_reset = 0;
     RA = 0;
@@ -276,6 +279,50 @@ module instruction_execute_tb;
     if (write_reg__out_execute !== 32'd31)
       $fatal("Error: write_reg__out_execute %d", write_reg__out_execute);
     if (data_to_write_in_MEM !== RB) $fatal("Error: data_to_write_in_MEM %d", data_to_write_in_MEM);
+
+    // test halt
+    $display("Test ADD sin corto 2");
+    rt = RT;
+    rd = RD;
+    RA = 32'd0 + RS;
+    RB = 32'd0 + RT;
+    opcode = ADD[31:26];
+    funct = ADD[5:0];
+    corto_rs = 2'b00;
+    corto_rt = 2'b00;
+    EX_alu_src__out_decode = 0;  // uso RB no inmediato
+    EX_alu_op__out_decode = 2'b10;  // tipo R
+    EX_reg_dst__out_decode = 1;  // uso rd no rt
+
+    #20;
+    if (ALU_result__out_execute !== RA + RB)
+      $fatal("Error: ALU_result__out_execute %d", ALU_result__out_execute);
+    if (write_reg__out_execute !== RD)
+      $fatal("Error: write_reg__out_execute %d", write_reg__out_execute);
+    if (data_to_write_in_MEM !== RB) $fatal("Error: data_to_write_in_MEM %d", data_to_write_in_MEM);
+
+    $display("Test HALT");
+    i_halt = 1;
+    rt = 5'b11111;
+    rd = 5'd5;
+    RA = 32'd8;
+    RB = 32'd4;
+    opcode = JAL[31:26];
+    funct = JAL[5:0];
+    inmediato = 32'd0 + JAL[15:0];
+    corto_rs = 2'b00;
+    corto_rt = 2'b00;
+    EX_alu_src__out_decode = 0;  // uso RB no inmediato
+    EX_alu_op__out_decode = 2'b00;  // para que haga suma
+    EX_reg_dst__out_decode = 0;  // uso rt no rd
+
+    #40;
+    if (ALU_result__out_execute !== RS + RT + 32'd0)
+      $fatal("Error: ALU_result__out_execute %d", ALU_result__out_execute);
+    if (write_reg__out_execute !== RD)
+      $fatal("Error: write_reg__out_execute %d", write_reg__out_execute);
+    if (data_to_write_in_MEM !== 32'd0 + RT)
+      $fatal("Error: data_to_write_in_MEM %d", data_to_write_in_MEM);
 
     $display("Passed Instruction Execute Test Bench");
     $finish;

@@ -1,6 +1,7 @@
 module instruction_execute (
     input wire i_clk,
     input wire i_reset,
+    input wire i_halt,
     input wire [31:0] i_RA,
     input wire [31:0] i_RB,
     input wire [4:0] i_rs,
@@ -118,7 +119,9 @@ module instruction_execute (
     if (i_reset) begin
       o_write_reg <= 5'b0;
     end else begin
-      o_write_reg <= i_EX_reg_dst ? i_rd : i_rt;
+      if (!i_halt) begin
+        o_write_reg <= i_EX_reg_dst ? i_rd : i_rt;
+      end
     end
   end
 
@@ -131,12 +134,14 @@ module instruction_execute (
       o_MEM_unsigned <= 1'b0;
       o_MEM_byte_half_word <= 2'b00;
     end else begin
-      o_WB_write <= i_WB_write;
-      o_WB_mem_to_reg <= i_WB_mem_to_reg;
-      o_MEM_read <= i_MEM_read;
-      o_MEM_write <= i_MEM_write;
-      o_MEM_unsigned <= i_MEM_unsigned;
-      o_MEM_byte_half_word <= i_MEM_byte_half_word;
+      if (!i_halt) begin
+        o_WB_write <= i_WB_write;
+        o_WB_mem_to_reg <= i_WB_mem_to_reg;
+        o_MEM_read <= i_MEM_read;
+        o_MEM_write <= i_MEM_write;
+        o_MEM_unsigned <= i_MEM_unsigned;
+        o_MEM_byte_half_word <= i_MEM_byte_half_word;
+      end
     end
   end
 
@@ -145,8 +150,10 @@ module instruction_execute (
       o_ALU_result <= 32'b0;
       o_data_to_write_in_MEM <= 32'b0;  // data to write in MEM
     end else begin
-      o_ALU_result <= ALU_result_wire;
-      o_data_to_write_in_MEM <= ALU_cortocircuito_B;  // data to write in MEM
+      if (!i_halt) begin
+        o_ALU_result <= ALU_result_wire;
+        o_data_to_write_in_MEM <= ALU_cortocircuito_B;  // data to write in MEM
+      end
     end
   end
 

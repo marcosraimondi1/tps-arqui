@@ -59,6 +59,7 @@ module instruction_decode_tb ();
   reg write_enable_WB;
   reg [4:0] register_WB;
   reg [31:0] data_WB;
+  reg i_halt;
 
   // senales del decode para el execute
   wire [31:0] RA;
@@ -72,7 +73,7 @@ module instruction_decode_tb ();
   wire [4:0] shamt;
   wire [31:0] jump_addr;
   wire jump_flag;
-  wire halt;
+  wire o_halt;
   // senales de control
   wire WB_write__out_decode;
   wire WB_mem_to_reg__out_decode;
@@ -87,6 +88,7 @@ module instruction_decode_tb ();
   instruction_decode instruction_decode1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
+      .i_halt(i_halt),
       .i_pc4(pc4),
       .i_instruction(instruction),
       .i_write_enable_WB(write_enable_WB),
@@ -116,7 +118,7 @@ module instruction_decode_tb ();
       // resultados de saltos y branches
       .o_jump_addr(jump_addr),
       .o_jump(jump_flag),
-      .o_halt(halt)
+      .o_halt(o_halt)
   );
 
   always #10 i_clk = ~i_clk;
@@ -130,6 +132,7 @@ module instruction_decode_tb ();
     write_enable_WB = 0;
     register_WB = 0;
     data_WB = 0;
+    i_halt = 0;
 
     #20;
     i_reset = 0;
@@ -370,13 +373,62 @@ module instruction_decode_tb ();
     if (MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
 
     // test halt
+    // primero cargamos una instruccion anterior
+    $display("SW2");
+    instruction = SW;
+    i_reset = 1;
+    #20;
+    i_reset = 0;
+    #20;
+    if (RA !== RS) $fatal("RA = %d", RA);
+    if (RB !== RT) $fatal("RB = %d", RB);
+    if (rs !== RS) $fatal("rs = %d", rs);
+    if (rt !== RT) $fatal("rt = %d", rt);
+    if (opcode !== 6'b101011) $fatal("opcode = %d", opcode);
+    if (jump_flag) $fatal("jump_flag = %d", jump_flag);
+    if (inmediato !== INMEDIATO) $fatal("inmediato = %d", inmediato);
+    // senales de control
+    if (WB_write__out_decode) $fatal("WB_write = %d", WB_write__out_decode);
+    if (MEM_read__out_decode) $fatal("MEM_read = %d", MEM_read__out_decode);
+    if (!MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
+    if (MEM_byte_half_word__out_decode !== 2'b11)
+      $fatal("MEM_byte_half_word = %d", MEM_byte_half_word__out_decode);
+    if (MEM_unsigned__out_decode) $fatal("MEM_unsigned = %d", MEM_unsigned__out_decode);
+    if (!EX_alu_src__out_decode)
+      $fatal("EX_alu_src = %d", EX_alu_src__out_decode);  // 1 -> inmediato
+    if (EX_reg_dst__out_decode) $fatal("EX_reg_dst = %d", EX_reg_dst__out_decode);  // 1 -> rd
+    if (EX_alu_op__out_decode !== 2'b00)
+      $fatal("EX_alu_op = %d", EX_alu_op__out_decode);  // 00 -> Load o Store
+
+    // la siguiente instruccion es el halt
     $display("HALT");
     instruction = HALT;
+    i_halt = 1;
     #10;
-    if (!halt) $fatal("halt = %d", halt);
+    if (!o_halt) $fatal("o_halt = %d", o_halt);
+    #10;
+    instruction = ADD;
+    #40;
+    // se tienen que mantener todas las salidas anteriores
+    if (RA !== RS) $fatal("RA = %d", RA);
+    if (RB !== RT) $fatal("RB = %d", RB);
+    if (rs !== RS) $fatal("rs = %d", rs);
+    if (rt !== RT) $fatal("rt = %d", rt);
+    if (opcode !== 6'b101011) $fatal("opcode = %d", opcode);
+    if (jump_flag) $fatal("jump_flag = %d", jump_flag);
+    if (inmediato !== INMEDIATO) $fatal("inmediato = %d", inmediato);
+    // senales de control
     if (WB_write__out_decode) $fatal("WB_write = %d", WB_write__out_decode);
-    if (MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
-
+    if (MEM_read__out_decode) $fatal("MEM_read = %d", MEM_read__out_decode);
+    if (!MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
+    if (MEM_byte_half_word__out_decode !== 2'b11)
+      $fatal("MEM_byte_half_word = %d", MEM_byte_half_word__out_decode);
+    if (MEM_unsigned__out_decode) $fatal("MEM_unsigned = %d", MEM_unsigned__out_decode);
+    if (!EX_alu_src__out_decode)
+      $fatal("EX_alu_src = %d", EX_alu_src__out_decode);  // 1 -> inmediato
+    if (EX_reg_dst__out_decode) $fatal("EX_reg_dst = %d", EX_reg_dst__out_decode);  // 1 -> rd
+    if (EX_alu_op__out_decode !== 2'b00)
+      $fatal("EX_alu_op = %d", EX_alu_op__out_decode);  // 00 -> Load o Store
     $display("Passed INSTRUCTION_DECODE Test Bench");
     $finish;
   end

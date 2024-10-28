@@ -7,6 +7,7 @@ module etapa_mem_tb;
   //inputs
   reg clk;
   reg reset;
+  reg i_halt;
   reg [4:0] register;
   reg [31:0] data_to_write;
   reg [31:0] Alu_result;
@@ -27,6 +28,7 @@ module etapa_mem_tb;
   etapa_mem #() etapa_mem_1 (
       .i_clk  (clk),
       .i_reset(reset),
+      .i_halt (i_halt),
 
       .i_write_reg(register),  // registro de destino donde se escriben los resultados en WB
       .i_data_to_write_in_MEM(data_to_write),  // data a escribir en memoria
@@ -58,6 +60,7 @@ module etapa_mem_tb;
   initial begin
 
     // Inicializar señales
+    i_halt = 0;
     clk = 0;
     reset = 0;
     register = 5'd0;
@@ -252,6 +255,43 @@ module etapa_mem_tb;
     end
 
     #20;
+
+    // test halt
+    $display("Test halt");
+
+    WB_write = 1;
+    WB_mem_to_reg = 1;
+    Alu_result = 12;
+    register = 5;
+
+    #20;
+    i_halt = 1;
+
+    WB_write = 0;
+    WB_mem_to_reg = 0;
+    Alu_result = 1;
+    register = 2;
+
+    #40;
+    if (out_WB_write != 1) begin
+      $fatal("Failed Test Bench, expected = %d, out_WB_write = %d ARE NOT EQUALS.", 1,
+             out_WB_write);
+    end
+    if (out_WB_mem_to_reg != 1) begin
+      $fatal("Failed Test Bench, expected = %d, out_WB_mem_to_reg = %d ARE NOT EQUALS.", 1,
+             out_WB_mem_to_reg);
+    end
+
+    if (out_ALU_result != 12) begin
+      $fatal("Failed Test Bench, expected = %d, out_ALU_result = %d ARE NOT EQUALS.", 12,
+             out_ALU_result);
+    end
+
+    if (out_write_reg != 5) begin
+      $fatal("Failed Test Bench, expected = %d, out_write_reg = %d ARE NOT EQUALS.", 5,
+             out_write_reg);
+    end
+
     $display("Passed ETAPA_MEM Test Bench");
 
     $finish;

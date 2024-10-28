@@ -1,18 +1,21 @@
 module pipeline (
     input wire i_clk,
-    input wire i_reset
+    input wire i_reset,
+    input wire i_halt,
+    input wire i_write_instruction_mem,  // flag para escribir memoria de instrucciones
+    input wire [31:0] i_instruction_mem_addr,  // direccion de memoria de instrucciones
+    input wire [31:0] i_instruction_mem_data  // dato a escribir en memoria de instrucciones
 );
-
-  reg write_instruction_mem;  // flag para escribir memoria
-  reg [31:0] instruction_mem_addr;
-  reg [31:0] instruction_mem_data;
 
   wire jump_flag;
   wire [31:0] jump_addr;
-  wire halt;
   wire stall;
   wire [31:0] instruction;
   wire [31:0] pc4;
+
+  wire halt;
+  wire halt_from_instruction;
+  assign halt = i_halt || halt_from_instruction;
 
   instruction_fetch #() instruction_fetch1 (
       .i_clk(i_clk),
@@ -58,6 +61,7 @@ module pipeline (
   instruction_decode instruction_decode1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
+      .i_halt(halt),
       .i_pc4(pc4),
       .i_instruction(instruction),
       .i_write_enable_WB(write_enable_WB),
@@ -89,7 +93,7 @@ module pipeline (
       .o_jump_addr(jump_addr),
       .o_jump(jump_flag),
 
-      .o_halt(halt)
+      .o_halt(halt_from_instruction)
   );
 
 
@@ -113,6 +117,7 @@ module pipeline (
   instruction_execute intstruction_execute1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
+      .i_halt(halt),
       .i_RA(RA),
       .i_RB(RB),
       .i_rs(rs),
@@ -166,6 +171,7 @@ module pipeline (
   etapa_mem etapa_mem1 (
       .i_clk  (i_clk),
       .i_reset(i_reset),
+      .i_halt (halt),
 
       .i_write_reg(write_reg__out_execute),
       .i_data_to_write_in_MEM(data_to_write_in_MEM),
