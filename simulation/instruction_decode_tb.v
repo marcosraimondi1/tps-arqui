@@ -368,6 +368,8 @@ module instruction_decode_tb ();
     instruction = HALT;
     #10;
     if (!halt) $fatal("halt = %d", halt);
+    if (WB_write__out_decode) $fatal("WB_write = %d", WB_write__out_decode);
+    if (MEM_write__out_decode) $fatal("MEM_write = %d", MEM_write__out_decode);
 
     $display("Passed INSTRUCTION_DECODE Test Bench");
     $finish;
