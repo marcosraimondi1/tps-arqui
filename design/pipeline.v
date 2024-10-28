@@ -40,7 +40,7 @@ module pipeline (
   wire [4:0] rt;
   wire [4:0] rd;
   wire [5:0] funct;
-  wire [15:0] inmediato;
+  wire [31:0] inmediato;
   wire [5:0] opcode;
   wire [4:0] shamt;
 

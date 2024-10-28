@@ -42,11 +42,11 @@ module instruction_execute (
     output reg [31:0] o_ALU_result
 );
 
-  reg signed  [31:0] ALU_data_A;
-  reg signed  [31:0] ALU_data_B;
-  reg signed  [31:0] ALU_cortocircuito_B;
-  reg signed  [ 5:0] ALU_op;  // revisar
-  wire signed [31:0] ALU_result_wire;
+  reg signed [31:0] ALU_data_A;
+  reg signed [31:0] ALU_data_B;
+  reg signed [31:0] ALU_cortocircuito_B;
+  reg [5:0] ALU_op;  // revisar
+  wire [31:0] ALU_result_wire;
 
   localparam ADD_OP = 6'b100000;
   localparam IDLE_OP = 6'b111111;
@@ -93,15 +93,16 @@ module instruction_execute (
 
 
   always @(*) begin : mux_cortocircuito_y_alu_src_B
+    case (i_corto_rt)
+      2'b00:   ALU_cortocircuito_B = i_RB;  // del banco de registros
+      2'b01:   ALU_cortocircuito_B = i_output_WB;  // del WB
+      2'b10:   ALU_cortocircuito_B = i_input_ALU_MEM;  // ALU result de la etapa de MEM
+      default: ALU_cortocircuito_B = 0;
+    endcase
+
     if (i_EX_alu_src) begin
       ALU_data_B = i_inmediato;
     end else begin
-      case (i_corto_rs)
-        2'b00:   ALU_cortocircuito_B = i_RB;  // del banco de registros
-        2'b01:   ALU_cortocircuito_B = i_output_WB;  // del WB
-        2'b10:   ALU_cortocircuito_B = i_input_ALU_MEM;  // ALU result de la etapa de MEM
-        default: ALU_cortocircuito_B = 0;
-      endcase
       ALU_data_B = ALU_cortocircuito_B;
     end
   end
