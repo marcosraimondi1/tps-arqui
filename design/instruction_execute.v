@@ -50,6 +50,9 @@ module instruction_execute (
 
   localparam ADD_OP = 6'b100000;
   localparam IDLE_OP = 6'b111111;
+  localparam OPCODE_TIPO_R = 6'b000000;
+  localparam OPCODE_JAL = 6'b000011;  // jump and link: guarda la direccion de retorno en reg 31
+  localparam FUNCT_JALR = 6'b001001;  // jump and link reg: guarda la direccion de retorno en rd
 
   always @(*) begin : alu_control
     case (i_EX_alu_op)
@@ -83,6 +86,11 @@ module instruction_execute (
       2'b10:   ALU_data_A = i_input_ALU_MEM;  // ALU result de la etapa de MEM
       default: ALU_data_A = 0;
     endcase
+
+    if (i_opcode == OPCODE_JAL || (i_opcode == OPCODE_TIPO_R && i_funct == FUNCT_JALR)) begin
+      // no cortocircuito para jumps
+      ALU_data_A = i_RA;
+    end
   end
 
 
@@ -93,6 +101,11 @@ module instruction_execute (
       2'b10:   ALU_cortocircuito_B = i_input_ALU_MEM;  // ALU result de la etapa de MEM
       default: ALU_cortocircuito_B = 0;
     endcase
+
+    if (i_opcode == OPCODE_JAL || (i_opcode == OPCODE_TIPO_R && i_funct == FUNCT_JALR)) begin
+      // no cortocircuito para jumps
+      ALU_cortocircuito_B = i_RB;
+    end
 
     if (i_EX_alu_src) begin
       ALU_data_B = i_inmediato;
