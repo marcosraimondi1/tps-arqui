@@ -13,14 +13,13 @@ module instruction_decode (
 
     output reg [31:0] o_RA,
     output reg [31:0] o_RB,
-    output reg [4:0] o_rs,
-    output reg [4:0] o_rt,
-    output reg [4:0] o_rd,
-    output reg [5:0] o_funct,
+    output reg [ 4:0] o_rs,
+    output reg [ 4:0] o_rt,
+    output reg [ 4:0] o_rd,
+    output reg [ 5:0] o_funct,
     output reg [31:0] o_inmediato,
-    output reg [5:0] o_opcode,
-    output reg [25:0] o_addr,  // direccion de jump incondicional
-    output reg [4:0] o_shamt,
+    output reg [ 5:0] o_opcode,
+    output reg [ 4:0] o_shamt,
 
     // senales de control
     output reg o_WB_write,  // si 1 la instruccion escribe en el banco de registros
@@ -34,12 +33,14 @@ module instruction_decode (
     output reg [1:0] o_MEM_byte_half_word,  // 00 byte, 01 half word, 11 word
 
     // resultados de saltos y branches
-    output wire [31:0] o_jump_addr,
-    output reg o_jump
+    output reg [31:0] o_jump_addr,
+    output reg o_jump,
+    output wire o_halt
 );
 
   wire [31:0] RA_wire;
   wire [31:0] RB_wire;
+  wire [ 5:0] funct_wire;
 
   wire [ 4:0] rs;
   wire [ 4:0] rt;
@@ -61,120 +62,189 @@ module instruction_decode (
       .o_r_data2(RB_wire)
   );
 
+  localparam HALT = 32'hffffffff;
   localparam OPCODE_TIPO_R = 6'b000000;
   localparam OPCODE_BEQ = 6'b000100;
   localparam OPCODE_BNE = 6'b000101;
 
+  // jumps
+  localparam OPCODE_JUMP = 6'b000010;  // pc <- {pc[31:28], addr, 2'b00}
+  localparam OPCODE_JAL = 6'b000011;  // jump and link: guarda la direccion de retorno en reg 31
+  localparam FUNCT_JR = 6'b001000;  // pc <- rs
+  localparam FUNCT_JALR = 6'b001001;  // jump and link reg: guarda la direccion de retorno en rd
+
   always @(posedge i_clk) begin : senales_WB
-    if (i_stall) begin
+    if (i_reset) begin
       o_WB_write <= 1'b0;
       o_WB_mem_to_reg <= 1'b0;
     end else begin
-      if (opcode == OPCODE_TIPO_R) begin
-        // operacion tipo R
-        o_WB_write <= 1'b1;
-        o_WB_mem_to_reg <= 1'b1;
-      end else if (opcode[5] == 1'b1 && opcode[3] == 1'b0) begin
-        // operacion tipo LOAD
-        o_WB_write <= 1'b1;
+      if (i_stall) begin
+        o_WB_write <= 1'b0;
         o_WB_mem_to_reg <= 1'b0;
       end else begin
-        // otras
-        o_WB_write <= 1'b0;
-        o_WB_mem_to_reg <= o_WB_mem_to_reg;  // no importa el valor
+        if (opcode == OPCODE_TIPO_R || opcode == OPCODE_JAL) begin
+          // operacion tipo R
+          if (funct_wire == FUNCT_JR) begin
+            o_WB_write <= 1'b0;
+            o_WB_mem_to_reg <= 1'b0;
+          end else begin
+            o_WB_write <= 1'b1;
+            o_WB_mem_to_reg <= 1'b1;
+          end
+        end else if (opcode[5] == 1'b1 && opcode[3] == 1'b0) begin
+          // operacion tipo LOAD
+          o_WB_write <= 1'b1;
+          o_WB_mem_to_reg <= 1'b0;
+        end else if (opcode[5:3] == 3'b001) begin
+          // operacion tipo inmediato
+          o_WB_write <= 1'b1;
+          o_WB_mem_to_reg <= 1'b1;
+        end else begin
+          // otras
+          o_WB_write <= 1'b0;
+          o_WB_mem_to_reg <= o_WB_mem_to_reg;  // no importa el valor
+        end
       end
     end
   end
 
   always @(posedge i_clk) begin : senales_MEM
-    if (i_stall) begin
+    if (i_reset) begin
       o_MEM_read <= 1'b0;
       o_MEM_write <= 1'b0;
       o_MEM_unsigned <= 1'b0;  // 1 unsigned 0 signed
       o_MEM_byte_half_word <= 2'b00;  // 00 byte, 01 half word, 11 word
     end else begin
-      if (opcode[5] == 1'b1) begin
-        // operacion tipo LOAD o STORE
-        o_MEM_unsigned <= opcode[2];  // 1 unsigned 0 signed
-        o_MEM_byte_half_word <= opcode[1:0];  // 00 byte, 01 half word, 11 word
-        if (opcode[3] == 1'b1) begin
-          // operacion tipo STORE
-          o_MEM_read  <= 1'b0;
-          o_MEM_write <= 1'b1;
+      if (i_stall) begin
+        o_MEM_read <= 1'b0;
+        o_MEM_write <= 1'b0;
+        o_MEM_unsigned <= 1'b0;  // 1 unsigned 0 signed
+        o_MEM_byte_half_word <= 2'b00;  // 00 byte, 01 half word, 11 word
+      end else begin
+        if (opcode[5] == 1'b1) begin
+          // operacion tipo LOAD o STORE
+          o_MEM_unsigned <= opcode[2];  // 1 unsigned 0 signed
+          o_MEM_byte_half_word <= opcode[1:0];  // 00 byte, 01 half word, 11 word
+          if (opcode[3] == 1'b1) begin
+            // operacion tipo STORE
+            o_MEM_read  <= 1'b0;
+            o_MEM_write <= 1'b1;
+          end else begin
+            // operacion tipo LOAD
+            o_MEM_read  <= 1'b1;
+            o_MEM_write <= 1'b0;
+          end
         end else begin
-          // operacion tipo LOAD
-          o_MEM_read  <= 1'b1;
+          // otras
+          o_MEM_read  <= 1'b0;
           o_MEM_write <= 1'b0;
         end
-      end else begin
-        // otras
-        o_MEM_read  <= 1'b0;
-        o_MEM_write <= 1'b0;
       end
     end
   end
 
   always @(posedge i_clk) begin : senales_EX
-    if (i_stall) begin
+    if (i_reset) begin
       o_EX_reg_dst <= 1'b0;
       o_EX_alu_src <= 1'b0;
       o_EX_alu_op  <= 2'b00;
     end else begin
-      if (opcode == OPCODE_TIPO_R) begin
-        o_EX_reg_dst <= 1'b1;  // registro destino rd
+      if (i_stall) begin
+        o_EX_reg_dst <= 1'b0;
         o_EX_alu_src <= 1'b0;
+        o_EX_alu_op  <= 2'b00;
       end else begin
-        o_EX_reg_dst <= 1'b0;  // registro de destino rt
-        o_EX_alu_src <= 1'b1;
-      end
+        if (opcode == OPCODE_TIPO_R) begin
+          o_EX_reg_dst <= 1'b1;  // registro destino rd
+          o_EX_alu_src <= 1'b0;
+        end else begin
+          o_EX_reg_dst <= 1'b0;  // registro de destino rt
+          o_EX_alu_src <= 1'b1;
+        end
 
-      if (opcode == OPCODE_TIPO_R) begin
-        // operacion tipo R, se usa el funct
-        o_EX_alu_op <= 2'b10;
-      end else if (opcode[5] == 1'b1) begin
-        // load o store
-        // se tiene que hacer una suma en la ALU para la direccion
-        o_EX_alu_op <= 2'b00;
-      end else if (opcode[5:3] == 3'b001) begin
-        // inmediatos que se tienen que identificar con el opcode
-        o_EX_alu_op <= 2'b11;
-      end else begin
-        // otro
-        o_EX_alu_op <= 2'b01;
+        if (opcode == OPCODE_TIPO_R) begin
+          // operacion tipo R, se usa el funct
+          o_EX_alu_op <= 2'b10;
+        end else if (opcode[5] == 1'b1) begin
+          // load o store
+          // se tiene que hacer una suma en la ALU para la direccion
+          o_EX_alu_op <= 2'b00;
+        end else if (opcode[5:3] == 3'b001 || opcode == OPCODE_JAL) begin
+          // inmediatos que se tienen que identificar con el opcode
+          o_EX_alu_op <= 2'b11;
+        end else begin
+          // otro
+          o_EX_alu_op <= 2'b01;
+        end
       end
     end
   end
 
   always @(posedge i_clk) begin : instrccion
-    // decoficacion de instruccion
-    o_RA <= RA_wire;  // valores del banco de registros
-    o_RB <= RB_wire;  // valores del banco de registros
-    o_rs <= rs;
-    o_rt <= rt;
-    o_opcode <= opcode;
-    o_rd <= i_instruction[15:11];
-    o_funct <= i_instruction[5:0];
-    o_inmediato <= inmediato;
-    o_addr <= i_instruction[25:0];
-    o_shamt <= i_instruction[10:6];
+    if (i_reset) begin
+      o_RA <= 0;
+      o_RB <= 0;
+      o_rs <= 0;
+      o_rt <= 0;
+      o_opcode <= 0;
+      o_rd <= 0;
+      o_funct <= 0;
+      o_inmediato <= 0;
+      o_shamt <= 0;
+    end else begin
+      // decoficacion de instruccion
+      if (opcode == OPCODE_JAL || (opcode == OPCODE_TIPO_R && funct_wire == FUNCT_JALR)) begin
+        // en RA va la direccion de retorno a la que hay que sumarle 4
+        o_RA <= i_pc4;
+        o_rs <= 0;  // para que no haya cortocircuito
+      end else begin
+        o_RA <= RA_wire;  // valores del banco de registros
+        o_rs <= rs;
+      end
+      o_RB <= RB_wire;  // valores del banco de registros
+
+      if (opcode == OPCODE_JAL) begin
+        o_rt <= 5'b11111;  // registro 31
+      end else begin
+        o_rt <= rt;
+      end
+
+      o_opcode <= opcode;
+      o_rd <= i_instruction[15:11];
+      o_funct <= funct_wire;
+      o_inmediato <= inmediato;
+      o_shamt <= i_instruction[10:6];
+    end
   end
 
-  always @(*) begin : jump_condition
+  always @(*) begin : jump
+    o_jump_addr = 0;
+    o_jump = 1'b0;
     case (opcode)
       OPCODE_BEQ: begin
         if (RA_wire == RB_wire) begin
-          // se cumple la condicion
-          o_jump = 1'b1;
-        end else begin
-          o_jump = 1'b0;
+          o_jump = 1'b1;  // se cumple la condicion
+          o_jump_addr = i_pc4 + (inmediato << 2);
         end
       end
       OPCODE_BNE: begin
         if (RA_wire != RB_wire) begin
-          // se cumple la condicion
+          o_jump = 1'b1;  // se cumple la condicion
+          o_jump_addr = i_pc4 + (inmediato << 2);
+        end
+      end
+      OPCODE_JUMP: begin
+        o_jump = 1'b1;
+        o_jump_addr = {i_pc4[31:28], i_instruction[25:0], 2'b00};
+      end
+      OPCODE_JAL: begin
+        o_jump = 1'b1;
+        o_jump_addr = {i_pc4[31:28], i_instruction[25:0], 2'b00};
+      end
+      OPCODE_TIPO_R: begin
+        if (funct_wire == FUNCT_JR || funct_wire == FUNCT_JALR) begin
           o_jump = 1'b1;
-        end else begin
-          o_jump = 1'b0;
+          o_jump_addr = RA_wire;  // PC <- RS
         end
       end
       default: o_jump = 1'b0;
@@ -185,6 +255,7 @@ module instruction_decode (
   assign rt = i_instruction[20:16];
   assign opcode = i_instruction[31:26];
   assign inmediato = {{16{i_instruction[15]}}, i_instruction[15:0]};  // extension de signo
-  assign o_jump_addr = i_pc4 + (inmediato << 2);
+  assign o_halt = (i_instruction == HALT);
+  assign funct_wire = i_instruction[5:0];
 
 endmodule

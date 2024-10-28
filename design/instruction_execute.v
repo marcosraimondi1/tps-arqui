@@ -50,6 +50,8 @@ module instruction_execute (
 
   localparam ADD_OP = 6'b100000;
   localparam IDLE_OP = 6'b111111;
+  localparam OPCODE_JAL = 6'b000011;
+  localparam JALR_OP = 6'b001001;
 
   always @(*) begin : alu_control
     case (i_EX_alu_op)
@@ -68,7 +70,11 @@ module instruction_execute (
       end
       2'b11: begin
         // operaciones con inmediatos, se tienen que identificar con el opcode
-        ALU_op = i_opcode;
+        if (i_opcode == OPCODE_JAL) begin
+          ALU_op = JALR_OP;  // RA + 4 (RA = pc4)
+        end else begin
+          ALU_op = i_opcode;
+        end
       end
       default: begin
         ALU_op = IDLE_OP;

@@ -6,10 +6,10 @@ module pipeline (
   reg write_instruction_mem;  // flag para escribir memoria
   reg [31:0] instruction_mem_addr;
   reg [31:0] instruction_mem_data;
-  reg halt;
 
   wire jump_flag;
   wire [31:0] jump_addr;
+  wire halt;
   wire stall;
   wire [31:0] instruction;
   wire [31:0] pc4;
@@ -73,14 +73,13 @@ module pipeline (
       .o_funct(funct),
       .o_inmediato(inmediato),
       .o_opcode(opcode),
-      .o_addr(),  // direccion de jump incondicional -----------------------------------------
       .o_shamt(shamt),
       // senales de control
       .o_WB_write(WB_write__out_decode),
       .o_WB_mem_to_reg(WB_mem_to_reg__out_decode),
       .o_MEM_read(MEM_read__out_decode),
       .o_MEM_write(MEM_write__out_decode),
-      .o_MEM_unsigned(MEM_write__out_decode),
+      .o_MEM_unsigned(MEM_unsigned__out_decode),
       .o_MEM_byte_half_word(MEM_byte_half_word__out_decode),
       .o_EX_alu_src(EX_alu_src__out_decode),
       .o_EX_reg_dst(EX_reg_dst__out_decode),
@@ -88,7 +87,9 @@ module pipeline (
 
       // resultados de saltos y branches
       .o_jump_addr(jump_addr),
-      .o_jump(jump_addr)
+      .o_jump(jump_flag),
+
+      .o_halt(halt)
   );
 
 

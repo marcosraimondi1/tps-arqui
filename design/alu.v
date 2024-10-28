@@ -34,6 +34,9 @@ module alu #(
   localparam LUI_OP = 6'b001111;
   localparam SLTI_OP = 6'b001010;
 
+  // jumps (la direccion de retorno viene en RA)
+  localparam JALR_OP = 6'b001001;  // return = pc4 + 4
+
   reg signed [NB_DATA-1:0] res;
   reg [NB_DATA-1:0] res_u;
   wire [NB_DATA-1:0] data_A_u;
@@ -66,6 +69,7 @@ module alu #(
       XORI_OP: res = i_data_A ^ i_data_B;
       LUI_OP:  res = i_data_B << 16;
       SLTI_OP: res = (i_data_A < i_data_B) ? 1 : 0;
+      JALR_OP: res = i_data_A + 4;
       default: res = {{(NB_DATA - 8) {1'b0}}, {8'ha1}};
     endcase
   end
