@@ -48,22 +48,23 @@ module instruction_decode (
 
   wire [31:0] RA_wire;
   wire [31:0] RB_wire;
-  wire [ 5:0] funct_wire;
+  wire [5:0] funct_wire;
 
-  wire [ 4:0] rs;
-  wire [ 4:0] rt;
-  wire [ 5:0] opcode;
+  wire [4:0] rs;
+  wire [4:0] rt;
+  wire [5:0] opcode;
   wire [31:0] inmediato;
 
-  wire [ 4:0] reg_rs_to_read;
+  wire [4:0] reg_rs_to_read;
 
+  wire write_enable;
   banco_registros #(
       .NB_REGISTER(32),
       .NB_ADDR(5)
   ) banco_registros1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
-      .i_wr_enable(i_write_enable_WB),
+      .i_wr_enable(write_enable),
       .i_w_addr(i_register_WB),
       .i_w_data(i_data_WB),
       .i_r_addr1(reg_rs_to_read),
@@ -72,6 +73,7 @@ module instruction_decode (
       .o_r_data2(RB_wire)
   );
 
+  localparam NOP = 32'h00000000;
   localparam HALT = 32'hffffffff;
   localparam OPCODE_TIPO_R = 6'b000000;
   localparam OPCODE_BEQ = 6'b000100;
@@ -89,7 +91,7 @@ module instruction_decode (
       o_WB_mem_to_reg <= 1'b0;
     end else begin
       if (!i_halt) begin  // solo avanzar si no estoy en halt
-        if (i_stall) begin
+        if (i_stall || NOP == i_instruction) begin
           o_WB_write <= 1'b0;
           o_WB_mem_to_reg <= 1'b0;
         end else begin
@@ -288,5 +290,6 @@ module instruction_decode (
 
   assign o_r_data = RA_wire;
   assign reg_rs_to_read = i_halt ? i_r_addr : rs;
+  assign write_enable = i_write_enable_WB & ~i_halt;
 
 endmodule

@@ -21,7 +21,7 @@ module banco_registros #(
   always @(negedge i_clk) begin
     if (i_reset) begin
       for (i = 0; i < 2 ** NB_ADDR; i = i + 1) begin
-        registers[i] <= i;
+        registers[i] <= {NB_REGISTER{1'b0}};
       end
     end else if (i_wr_enable) begin
       if (i_w_addr != 0) begin

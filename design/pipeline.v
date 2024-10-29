@@ -18,7 +18,8 @@ module pipeline #(
     output wire [NB_IF_ID-1:0] o_IF_ID,
     output wire [NB_ID_EX-1:0] o_ID_EX,
     output wire [NB_EX_MEM-1:0] o_EX_MEM,
-    output wire [NB_MEM_WB-1:0] o_MEM_WB
+    output wire [NB_MEM_WB-1:0] o_MEM_WB,
+    output wire o_end
 );
 
   wire jump_flag;
@@ -29,14 +30,13 @@ module pipeline #(
 
   wire halt;
   wire halt_from_instruction;
-  assign halt = i_halt || halt_from_instruction;
 
   instruction_fetch #() instruction_fetch1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
-      .i_write_instruction_mem(write_instruction_mem),
-      .i_instruction_mem_addr(instruction_mem_addr),
-      .i_instruction_mem_data(instruction_mem_data),
+      .i_write_instruction_mem(i_write_instruction_mem),
+      .i_instruction_mem_addr(i_instruction_mem_addr),
+      .i_instruction_mem_data(i_instruction_mem_data),
       .i_jump(jump_flag),
       .i_jump_addr(jump_addr),
       .i_stall(stall),
@@ -45,7 +45,6 @@ module pipeline #(
       .o_pc4(pc4)
   );
 
-  assign o_IF_ID = {instruction, pc4};
 
   // senales del writeback al decode
   wire write_enable_WB;
@@ -115,26 +114,6 @@ module pipeline #(
       .o_r_data(o_r_data_registers)
   );
 
-  assign o_ID_EX = {
-    RA,  // 32 bits
-    RB,  // 32 bits
-    rs,  // 5 bits
-    rt,  // 5 bits
-    rd,  // 5 bits
-    funct,  // 6 bits
-    inmediato,  // 32 bits
-    opcode,  // 6 bits
-    shamt,  // 5 bits
-    WB_write__out_decode,  // 1 bit
-    WB_mem_to_reg__out_decode,  // 1 bit
-    MEM_read__out_decode,  // 1 bit
-    MEM_write__out_decode,  // 1 bit
-    MEM_unsigned__out_decode,  // 1 bit
-    MEM_byte_half_word__out_decode,  // 2 bits
-    EX_alu_src__out_decode,  // 1 bit
-    EX_reg_dst__out_decode,  // 1 bit
-    EX_alu_op__out_decode  // 2 bits
-  };  // total 139 bits
 
 
   // senales de control
@@ -199,17 +178,6 @@ module pipeline #(
       .o_ALU_result(ALU_result__out_execute)
   );
 
-  assign o_EX_MEM = {
-    WB_write__out_execute,
-    WB_mem_to_reg__out_execute,
-    MEM_read__out_execute,
-    MEM_write__out_execute,
-    MEM_unsigned__out_execute,
-    MEM_byte_half_word__out_execute,
-    write_reg__out_execute,
-    data_to_write_in_MEM,
-    ALU_result__out_execute
-  };  // total 76 bits
 
   // senales de control
   wire WB_write__out_mem;
@@ -251,13 +219,6 @@ module pipeline #(
       .o_r_data(o_r_data_data_mem)
   );
 
-  assign o_MEM_WB = {
-    WB_write__out_mem,
-    WB_mem_to_reg__out_mem,
-    ALU_result__out_mem,
-    read_data_from_mem,
-    write_reg__out_mem
-  };  // total 71 bits
 
   etapa_wb etapa_wb1 (
       .i_write_reg (write_reg__out_mem),
@@ -288,9 +249,6 @@ module pipeline #(
   wire [4:0] rs_ID;
   wire [4:0] rt_ID;
 
-  assign rs_ID = instruction[25:21];
-  assign rt_ID = instruction[20:16];
-
   unidad_deteccion_riesgos unidad_deteccion_riesgos1 (
       .i_rs_ID(rs_ID),
       .i_rt_ID(rt_ID),
@@ -298,6 +256,60 @@ module pipeline #(
       .i_mem_read_EX(MEM_read__out_decode),
       .o_stall(stall)
   );
+
+  assign rs_ID = instruction[25:21];
+  assign rt_ID = instruction[20:16];
+
+  assign halt = i_halt || halt_from_instruction;
+
+  // latches intermedios del pipeline
+  assign o_IF_ID = {
+    instruction,  // 32 bits
+    pc4  // 32 bits
+  };  // total 64 bits
+
+  assign o_ID_EX = {
+    RA,  // 32 bits
+    RB,  // 32 bits
+    rs,  // 5 bits
+    rt,  // 5 bits
+    rd,  // 5 bits
+    funct,  // 6 bits
+    inmediato,  // 32 bits
+    opcode,  // 6 bits
+    shamt,  // 5 bits
+    WB_write__out_decode,  // 1 bit
+    WB_mem_to_reg__out_decode,  // 1 bit
+    MEM_read__out_decode,  // 1 bit
+    MEM_write__out_decode,  // 1 bit
+    MEM_unsigned__out_decode,  // 1 bit
+    MEM_byte_half_word__out_decode,  // 2 bits
+    EX_alu_src__out_decode,  // 1 bit
+    EX_reg_dst__out_decode,  // 1 bit
+    EX_alu_op__out_decode  // 2 bits
+  };  // total 139 bits
+
+  assign o_EX_MEM = {
+    write_reg__out_execute,  // 5 bits
+    data_to_write_in_MEM,  // 32 bits
+    ALU_result__out_execute,  // 32 bits
+    WB_write__out_execute,  // 1 bit
+    WB_mem_to_reg__out_execute,  // 1 bit
+    MEM_read__out_execute,  // 1 bit
+    MEM_write__out_execute,  // 1 bit
+    MEM_unsigned__out_execute,  // 1 bit
+    MEM_byte_half_word__out_execute  // 2 bits
+  };  // total 76 bits
+
+  assign o_MEM_WB = {
+    ALU_result__out_mem,  // 32 bits
+    read_data_from_mem,  // 32 bits
+    write_reg__out_mem,  // 5 bits
+    WB_write__out_mem,  // 1 bit
+    WB_mem_to_reg__out_mem  // 1 bit
+  };  // total 71 bits
+
+  assign o_end = halt_from_instruction;
 
 endmodule
 

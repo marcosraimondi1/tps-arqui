@@ -28,12 +28,12 @@ module instruction_fetch (
   );
 
   xilinx_one_port_ram_async #(
-      .ADDR_WIDTH(12),  // 4K direcciones
-      .DATA_WIDTH(8)    // 8 bit data
+      .ADDR_WIDTH(8),  // 256 direcciones (64 instrucciones de 32 bits cada una)
+      .DATA_WIDTH(8)   // 8 bit data
   ) instruction_mem (
       .i_clk(i_clk),
       .i_write_enable(i_write_instruction_mem),
-      .i_addr(instruction_addr),
+      .i_addr(instruction_addr[7:0]),
       .i_data(i_instruction_mem_data),
       .o_data(instruction_from_mem)
   );

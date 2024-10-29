@@ -30,7 +30,8 @@ module etapa_mem (
 );
 
   wire [31:0] read_data_wire;
-  reg  [31:0] data_to_MEM;
+  reg [31:0] data_to_MEM;
+  wire write_enable;
 
   localparam BYTE = 2'b00;
   localparam HALF_WORD = 2'b01;
@@ -85,12 +86,12 @@ module etapa_mem (
   wire [31:0] mem_addr;
 
   xilinx_one_port_ram_async #(
-      .ADDR_WIDTH(12),  // 4K direcciones
-      .DATA_WIDTH(8)    // 8 bit data en ram
+      .ADDR_WIDTH(8),  // 256 direcciones (64 datos de 32 bits cada uno)
+      .DATA_WIDTH(8)   // 8 bit data en ram
   ) mem (
       .i_clk(i_clk),
-      .i_write_enable(i_MEM_write),
-      .i_addr(mem_addr),
+      .i_write_enable(write_enable),
+      .i_addr(mem_addr[7:0]),
       .i_data(data_to_MEM),
       .o_data(read_data_wire)
   );
@@ -120,5 +121,6 @@ module etapa_mem (
 
   assign mem_addr = i_halt ? i_r_addr : i_ALU_result[11:0];
   assign o_r_data = read_data_wire;
+  assign write_enable = i_MEM_write & ~i_halt;
 
 endmodule
