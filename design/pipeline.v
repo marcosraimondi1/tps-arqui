@@ -72,6 +72,7 @@ module pipeline #(
   wire EX_alu_src__out_decode;
   wire EX_reg_dst__out_decode;
   wire [1:0] EX_alu_op__out_decode;
+  wire [1:0] salto_con_registro;  // 00 no salto, 01 salto usando rs y rt, 10 salto usando rs
 
   instruction_decode instruction_decode1 (
       .i_clk(i_clk),
@@ -107,6 +108,7 @@ module pipeline #(
       // resultados de saltos y branches
       .o_jump_addr(jump_addr),
       .o_jump(jump_flag),
+      .o_salto_con_registro(salto_con_registro),
 
       .o_halt(halt_from_instruction),
 
@@ -249,11 +251,23 @@ module pipeline #(
   wire [4:0] rs_ID;
   wire [4:0] rt_ID;
 
+  wire [4:0] reg_dst_EX;
+  assign reg_dst_EX = EX_reg_dst__out_decode ? rd : rt;
+
   unidad_deteccion_riesgos unidad_deteccion_riesgos1 (
       .i_rs_ID(rs_ID),
       .i_rt_ID(rt_ID),
       .i_rt_EX(rt),
       .i_mem_read_EX(MEM_read__out_decode),
+
+      .i_salto_con_registro(salto_con_registro),  // 00 no salto, 01 salto usando rs y rt, 10 salto usando rs
+      .i_reg_dst_EX(reg_dst_EX),
+      .i_reg_dst_MEM(write_reg__out_execute),
+      .i_reg_dst_WB(write_reg__out_mem),
+      .i_WB_write_EX(WB_write__out_decode),
+      .i_WB_write_MEM(WB_write__out_execute),
+      .i_WB_write_WB(WB_write__out_mem),
+
       .o_stall(stall)
   );
 

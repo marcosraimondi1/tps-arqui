@@ -38,10 +38,12 @@ module instruction_decode (
     // resultados de saltos y branches
     output reg [31:0] o_jump_addr,
     output reg o_jump,
-    output wire o_halt,
+    output reg [1:0] o_salto_con_registro,  // 00 no salto, 01 salto usando rs y rt (BEQ, BNE),
+                                            // 10 salto usando rs (JR, JALR)
 
+    output wire o_halt,
     // para debug unit
-    input  wire [ 4:0] i_r_addr,
+    input wire [4:0] i_r_addr,
     output wire [31:0] o_r_data
 
 );
@@ -260,17 +262,20 @@ module instruction_decode (
   always @(*) begin : jump
     o_jump_addr = 0;
     o_jump = 1'b0;
+    o_salto_con_registro = 2'b00;  // no salto
     case (opcode)
       OPCODE_BEQ: begin
         if (RA_wire == RB_wire) begin
           o_jump = 1'b1;  // se cumple la condicion
           o_jump_addr = i_pc4 + (inmediato << 2);
+          o_salto_con_registro = 2'b01;  // salto usando rs y rt
         end
       end
       OPCODE_BNE: begin
         if (RA_wire != RB_wire) begin
           o_jump = 1'b1;  // se cumple la condicion
           o_jump_addr = i_pc4 + (inmediato << 2);
+          o_salto_con_registro = 2'b01;  // salto usando rs y rt
         end
       end
       OPCODE_JUMP: begin
@@ -285,6 +290,7 @@ module instruction_decode (
         if (funct_wire == FUNCT_JR || funct_wire == FUNCT_JALR) begin
           o_jump = 1'b1;
           o_jump_addr = RA_wire;  // PC <- RS
+          o_salto_con_registro = 2'b10;  // salto usando rs
         end
       end
       default: o_jump = 1'b0;

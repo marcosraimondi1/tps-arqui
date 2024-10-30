@@ -73,7 +73,7 @@ module pipeline_tb ();
   localparam REG3 = 5'd3;
 
   localparam LIM = 16'd4;  // numero de iteraciones
-  localparam LOOP_BACK = 16'b1111111111111000;  // direccion relativa loop (-8 instrucciones atras)
+  localparam LOOP_BACK = 16'b1111111111111100;  // direccion relativa loop (-4 instrucciones atras)
 
   localparam R1_INIT1 = {6'b000000, REG1, REG1, REG1, 5'b00000, 6'b100011};  // Inicializa r1 en 0
   localparam R2_INIT1 = {6'b000000, REG2, REG2, REG2, 5'b00000, 6'b100011};  // Inicializa r2 en 0
@@ -112,7 +112,7 @@ module pipeline_tb ();
   ) pipeline1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
-      .i_halt(i_halt),
+      .i_stop(i_halt),
       .i_write_instruction_mem(i_write_instruction_mem),
       .i_instruction_mem_addr(i_instruction_mem_addr),
       .i_instruction_mem_data(i_instruction_mem_data),
@@ -243,34 +243,13 @@ module pipeline_tb ();
     i_instruction_mem_addr = 60;
     i_instruction_mem_data = R3_INC;
     #20;
-    i_instruction_mem_addr = 64;
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 68;
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 72;
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 76;
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 80;
+    i_instruction_mem_addr = 64;  // aca branch, usa reg r3 asique debe haber stall
     i_instruction_mem_data = BNE_R3_R2;
     #20;
-    i_instruction_mem_addr = 84;  // delay slot
+    i_instruction_mem_addr = 68;  // delay slot
     i_instruction_mem_data = NOP;  // NOP
     #20;
-    i_instruction_mem_addr = 88;  // delay slot
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 92;  // delay slot
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 96;  // delay slot
-    i_instruction_mem_data = NOP;  // NOP
-    #20;
-    i_instruction_mem_addr = 100;
+    i_instruction_mem_addr = 72;  // despues de este halt igual se deberian terminar las ops
     i_instruction_mem_data = HALT;  // halt
     #20;
     i_write_instruction_mem = 0;
