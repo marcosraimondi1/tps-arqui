@@ -6,7 +6,7 @@ module pipeline #(
 ) (
     input wire i_clk,
     input wire i_reset,
-    input wire i_halt,
+    input wire i_stop,
     input wire i_write_instruction_mem,  // flag para escribir memoria de instrucciones
     input wire [31:0] i_instruction_mem_addr,  // direccion de memoria de instrucciones
     input wire [31:0] i_instruction_mem_data,  // dato a escribir en memoria de instrucciones
@@ -28,7 +28,7 @@ module pipeline #(
   wire [31:0] instruction;
   wire [31:0] pc4;
 
-  wire halt;
+  wire halt;  // stop de afuera o halt de instruccion
   wire halt_from_instruction;
 
   instruction_fetch #() instruction_fetch1 (
@@ -136,7 +136,7 @@ module pipeline #(
   instruction_execute intstruction_execute1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
-      .i_halt(halt),
+      .i_halt(i_stop),
       .i_RA(RA),
       .i_RB(RB),
       .i_rs(rs),
@@ -191,7 +191,7 @@ module pipeline #(
   etapa_mem etapa_mem1 (
       .i_clk  (i_clk),
       .i_reset(i_reset),
-      .i_halt (halt),
+      .i_halt (i_stop),
 
       .i_write_reg(write_reg__out_execute),
       .i_data_to_write_in_MEM(data_to_write_in_MEM),
@@ -260,7 +260,7 @@ module pipeline #(
   assign rs_ID = instruction[25:21];
   assign rt_ID = instruction[20:16];
 
-  assign halt = i_halt || halt_from_instruction;
+  assign halt = i_stop || halt_from_instruction;
 
   // latches intermedios del pipeline
   assign o_IF_ID = {
