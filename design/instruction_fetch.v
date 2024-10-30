@@ -6,8 +6,8 @@ module instruction_fetch (
     input wire [31:0] i_instruction_mem_data,
     input wire i_jump,
     input wire [31:0] i_jump_addr,
-    input wire i_stall,
-    input wire i_halt,
+    input wire i_stall,  // Proviene de la unidad de deteción de riesgos
+    input wire i_halt,  // Proviene de la instrucción (HALT) ó de la debug unit
     output reg [31:0] o_instruction,
     output wire [31:0] o_pc4
 );
@@ -21,8 +21,8 @@ module instruction_fetch (
       .i_reset(i_reset),
       .i_jump_addr(i_jump_addr),  // pendiente revisar
       .i_jump(i_jump),  // pendiente revisar
-      .i_stall(i_stall),  // pendiente revisar
-      .i_halt(i_halt),  // pendiente revisar
+      .i_stall(i_stall),  // Proviene de la unidad de deteción de riesgos
+      .i_halt(i_halt),  // Proviene de la instrucción (HALT) ó de la debug unit
       .o_pc(pc),
       .o_pc4(o_pc4)
   );
