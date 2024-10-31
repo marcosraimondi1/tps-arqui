@@ -306,6 +306,6 @@ module instruction_decode (
 
   assign o_r_data = RA_wire;
   assign reg_rs_to_read = i_halt ? i_r_addr : rs;
-  assign write_enable = i_write_enable_WB & ~i_halt;
+  assign write_enable = i_write_enable_WB;
 
 endmodule

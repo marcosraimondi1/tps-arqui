@@ -1,13 +1,13 @@
 module uart_interface #(
     parameter NB_DATA   = 8,
     parameter NB_IF_ID  = 64,
-    parameter NB_ID_EX  = 139,
-    parameter NB_EX_MEM = 76,
-    parameter NB_MEM_WB = 71
+    parameter NB_ID_EX  = 144,  // 139,
+    parameter NB_EX_MEM = 80,   // 76,
+    parameter NB_MEM_WB = 72    // 71
 ) (
-    // uart
     input wire i_clk,
     input wire i_reset,
+    // uart
     input wire i_rx_done,
     input wire i_tx_done,
     input wire [NB_DATA-1:0] i_rx_data,
@@ -30,7 +30,7 @@ module uart_interface #(
     output wire [31:0] o_instruction_mem_addr,  // direccion de memoria de instrucciones
     output wire [31:0] o_instruction_mem_data,  // dato a escribir en memoria de instrucciones
     output wire [4:0] o_r_addr_registers,
-    output wire [4:0] o_r_addr_data_mem
+    output wire [31:0] o_r_addr_data_mem
 );
 
   // states
@@ -60,12 +60,12 @@ module uart_interface #(
   reg tx_sending;
   reg [2:0] state, next_state;
   // variables
+  reg write_instruction_mem;  // revisar
   reg debug_mode, next_debug_mode;  // 0: cont, 1: debug
   reg [NB_DATA-1:0] tx_data, next_tx_data;
   reg tx_start, next_tx_start;
   reg reset_pipeline, next_reset_pipeline;
   reg stop, next_stop;
-  reg write_instruction_mem;
   reg [31:0] instruction_mem_addr, next_instruction_mem_addr;
   reg [31:0] instruction_mem_data, next_instruction_mem_data;
   reg [4:0] r_addr_registers, next_r_addr_registers;
@@ -74,11 +74,11 @@ module uart_interface #(
   reg [31:0] counter, next_counter;
 
   // EX_MEM latches
-  wire [31:0] ALU_result_EX_MEM;
-  wire MEM_write_EX_MEM;
+  wire MEM_write_EX_MEM;  // si se escribio en memoria
+  wire [31:0] ALU_result_EX_MEM;  // direccion que se escribio
 
 
-  always @(posedge i_clk) begin
+  always @(posedge i_clk) begin : actualizacion_de_registros
     if (i_reset) begin
       state <= IDLE_STATE;
       tx_data <= 0;
@@ -162,19 +162,19 @@ module uart_interface #(
       end
 
       SEND_DATA_MEM_STATE: begin
-        if (counter == (MAX_DATOS * 4)) begin
+        if (!tx_sending && counter == (MAX_DATOS * 4)) begin
           next_state = SEND_DATA_REGS_STATE;
         end
       end
 
       SEND_DATA_REGS_STATE: begin
-        if (counter == (32 * 4)) begin
+        if (!tx_sending && counter == (32 * 4)) begin
           next_state = SEND_DATA_LATCHES_STATE;
         end
       end
 
       SEND_DATA_LATCHES_STATE: begin
-        if (sending_latches == 2'b11 && counter == $ceil(NB_MEM_WB / 8)) begin
+        if (!tx_sending && sending_latches == 2'b11 && counter == (NB_MEM_WB / 8)) begin
           // se envio el ultimo latch intermedio, finalizar envio de datos
           if (debug_mode) begin
             next_state = DEBUG_MODE_STATE;  // finished step
@@ -212,6 +212,9 @@ module uart_interface #(
         next_counter = 0;
         next_debug_mode = 0;
         next_sending_latches = 0;
+        next_instruction_mem_addr = 0;
+        next_r_addr_data_mem = 0;
+        next_r_addr_registers = 0;
       end
 
       WAIT_INSTR_STATE: begin
@@ -257,7 +260,7 @@ module uart_interface #(
             if (used_mem[r_addr_data_mem[NB_MEM_ADDR:2]]) begin
               // enviar dato, primero el MSByte
               next_tx_start = 1;
-              next_tx_data  = i_r_data_data_mem[(31-counter*8)-:8];
+              next_tx_data  = i_r_data_data_mem[(31-counter[1:0]*8)-:8];
               next_counter  = counter + 1;  // contador de bytes
 
               if (counter[1:0] == 2'b11) begin
@@ -277,11 +280,32 @@ module uart_interface #(
       SEND_DATA_REGS_STATE: begin
         next_stop = 1;
         if (!tx_sending) begin
+          if (counter == (32 * 4)) begin
+            // se enviaron todos los registros
+            next_counter = 0;
+            next_r_addr_registers = 0;
+          end else begin
+            // enviar dato, primero el MSByte
+            next_tx_start = 1;
+            next_tx_data  = i_r_data_registers[(31-counter[1:0]*8)-:8];  // [31-:8] = [31:24]
+            next_counter  = counter + 1;  // contador de bytes
+
+            if (counter[1:0] == 2'b11) begin
+              // se enviaron todos los bytes de esta palabra, avanzar a la siguiente direccion
+              next_r_addr_registers = r_addr_registers + 1;
+            end
+          end
+        end
+      end
+
+      SEND_DATA_LATCHES_STATE: begin
+        next_stop = 1;
+        if (!tx_sending) begin
           next_counter = counter + 1;
 
-          case (sending_latches)
+          case (sending_latches)  // que latch enviar
             2'b00: begin
-              if (counter == $ceil(NB_IF_ID / 8)) begin
+              if (counter == (NB_IF_ID / 8)) begin
                 next_counter = 0;
                 next_sending_latches = 2'b01;
               end else begin
@@ -291,7 +315,7 @@ module uart_interface #(
             end
 
             2'b01: begin
-              if (counter == $ceil(NB_ID_EX / 8)) begin
+              if (counter == (NB_ID_EX / 8)) begin
                 next_counter = 0;
                 next_sending_latches = 2'b10;
               end else begin
@@ -301,7 +325,7 @@ module uart_interface #(
             end
 
             2'b10: begin
-              if (counter == $ceil(NB_EX_MEM / 8)) begin
+              if (counter == (NB_EX_MEM / 8)) begin
                 next_counter = 0;
                 next_sending_latches = 2'b11;
               end else begin
@@ -311,7 +335,7 @@ module uart_interface #(
             end
 
             2'b11: begin
-              if (counter == $ceil(NB_MEM_WB / 8)) begin
+              if (counter == (NB_MEM_WB / 8)) begin
                 next_counter = 0;
                 next_sending_latches = 2'b00;
               end else begin
@@ -326,20 +350,6 @@ module uart_interface #(
             end
 
           endcase
-        end
-      end
-
-      SEND_DATA_LATCHES_STATE: begin
-        next_stop = 1;
-        if (!tx_sending) begin
-          if (counter == (NB_IF_ID / 8)) begin
-            next_counter = 0;
-          end else begin
-            // enviar IF_ID latch
-            next_tx_start = 1;
-            next_tx_data  = i_r_data_registers[(NB_IF_ID-1-counter*8)-:8];
-            next_counter  = counter + 1;  // contador de bytes enviados
-          end
         end
       end
 

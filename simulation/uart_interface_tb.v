@@ -9,11 +9,11 @@ module uart_interface_tb;
   localparam END_DEBUG_OP = 8'b00000100;
 
   // Parameters
-  parameter NB_DATA = 8;
-  parameter NB_IF_ID = 64;
-  parameter NB_ID_EX = 139;
-  parameter NB_EX_MEM = 76;
-  parameter NB_MEM_WB = 71;
+  parameter NB_DATA   = 8;
+    parameter NB_IF_ID  = 64;
+    parameter NB_ID_EX  = 144;  // 139,
+    parameter NB_EX_MEM = 80;   // 76,
+    parameter NB_MEM_WB = 72;   // 71
 
   // Inputs
   reg i_clk;
@@ -227,8 +227,6 @@ module uart_interface_tb;
     #20;
     ALU_result_EX_MEM = 32'h0000000f + 4;  // posicion de memoria
     #20;
-    ALU_result_EX_MEM = 32'h0000000f + 8;  // posicion de memoria
-    #20;
     MEM_write_EX_MEM = 0;
 
     #100;
@@ -239,24 +237,73 @@ module uart_interface_tb;
     #20;
     if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1);
 
-    @(posedge o_reset_pipeline);
+    // tiene que enviar 2 datos de memoria = 8 bytes
+    repeat (8) begin
+      @(posedge o_tx_start);  // esperar a que se envie un dato
+      #20 i_tx_done = 1;
+      #20 i_tx_done = 0;
+    end
 
+    // se tienen que enviar 32 registros = 128 bytes
+    repeat (128) begin
+      @(posedge o_tx_start);  // esperar a que se envie un dato
+      #20 i_tx_done = 1;
+      #20 i_tx_done = 0;
+    end
+
+    // se tienen que enviar los latches = 64 bits (8 bytes) + 1 (18 bytes) + 76 bits (10 bytes) + 71 bits (9 bytes) = 350 bits = 45 bytes
+    repeat (45) begin
+      @(posedge o_tx_start);  // esperar a que se envie un dato
+      #20 i_tx_done = 1;
+      #20 i_tx_done = 0;
+    end
+
+    @(posedge o_reset_pipeline);  // vuelta a idle
+    #60;
     // Test 3: START_DEBUG_OP and STEP_OP
     i_rx_data = START_DEBUG_OP;
     i_rx_done = 1;
-    #20;
+    #60;
     i_rx_done = 0;
-
+    if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1);
+    
     i_rx_data = STEP_OP;
     i_rx_done = 1;
     #20;
     i_rx_done = 0;
+    if (o_stop !== 0) $fatal("Error: o_stop = %d, expected %d", o_stop, 0);
+    
+    #20;
+    // state == send_state
+    if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1); 
+    
+    // no tiene que enviar datos de memoria
 
+    // se tienen que enviar 32 registros = 128 bytes
+    repeat (128) begin
+      @(posedge o_tx_start);  // esperar a que se envie un dato
+      #20 i_tx_done = 1;
+      #20 i_tx_done = 0;
+    end
+
+    // se tienen que enviar los latches = 64 bits (8 bytes) + 1 (18 bytes) + 76 bits (10 bytes) + 71 bits (9 bytes) = 350 bits = 45 bytes
+    repeat (45) begin
+      @(posedge o_tx_start);  // esperar a que se envie un dato
+      #20 i_tx_done = 1;
+      #20 i_tx_done = 0;
+    end
+    
+    #60;
     // Test 4: END_DEBUG_OP
+    
     i_rx_data = END_DEBUG_OP;
     i_rx_done = 1;
     #20 i_rx_done = 0;
 
+    // volvio a idle
+    if (o_reset_pipeline !== 1)
+      $fatal("Error: o_reset_pipeline = %d, expected %d", o_reset_pipeline, 1);
+    if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1);
 
     // Test end
     #100;
