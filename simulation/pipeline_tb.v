@@ -94,7 +94,7 @@ module pipeline_tb ();
   reg [31:0] i_instruction_mem_addr;
   reg [31:0] i_instruction_mem_data;
   reg [4:0] i_r_addr_registers;
-  reg [4:0] i_r_addr_data_mem;
+  reg [31:0] i_r_addr_data_mem;
 
   wire [31:0] o_r_data_registers;
   wire [31:0] o_r_data_data_mem;

@@ -12,7 +12,7 @@ module pipeline #(
     input wire [31:0] i_instruction_mem_data,  // dato a escribir en memoria de instrucciones
 
     input wire [4:0] i_r_addr_registers,
-    input wire [4:0] i_r_addr_data_mem,
+    input wire [31:0] i_r_addr_data_mem,
     output wire [31:0] o_r_data_registers,
     output wire [31:0] o_r_data_data_mem,
     output wire [NB_IF_ID-1:0] o_IF_ID,

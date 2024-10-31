@@ -1,147 +1,405 @@
 module uart_interface #(
     parameter NB_DATA   = 8,
-    parameter NB_ALU_OP = 6
+    parameter NB_IF_ID  = 64,
+    parameter NB_ID_EX  = 139,
+    parameter NB_EX_MEM = 76,
+    parameter NB_MEM_WB = 71
 ) (
+    // uart
     input wire i_clk,
     input wire i_reset,
     input wire i_rx_done,
     input wire i_tx_done,
     input wire [NB_DATA-1:0] i_rx_data,
-    input wire [NB_DATA-1:0] i_alu_data_out,
+
     output wire [NB_DATA-1:0] o_tx_data,
-    output wire [5:0] o_alu_op,
-    output wire [NB_DATA-1:0] o_alu_data_A,
-    output wire [NB_DATA-1:0] o_alu_data_B,
-    output wire o_tx_start
+    output wire o_tx_start,
+
+    // pipeline
+    input wire [31:0] i_r_data_registers,
+    input wire [31:0] i_r_data_data_mem,
+    input wire [NB_IF_ID-1:0] i_IF_ID,
+    input wire [NB_ID_EX-1:0] i_ID_EX,
+    input wire [NB_EX_MEM-1:0] i_EX_MEM,
+    input wire [NB_MEM_WB-1:0] i_MEM_WB,
+    input wire i_end,
+
+    output wire o_reset_pipeline,
+    output wire o_stop,
+    output wire o_write_instruction_mem,  // flag para escribir memoria de instrucciones
+    output wire [31:0] o_instruction_mem_addr,  // direccion de memoria de instrucciones
+    output wire [31:0] o_instruction_mem_data,  // dato a escribir en memoria de instrucciones
+    output wire [4:0] o_r_addr_registers,
+    output wire [4:0] o_r_addr_data_mem
 );
 
   // states
-  localparam IDLE_STATE = 2'b00;
-  localparam LOAD_STATE = 2'b01;
-  localparam SEND_STATE = 2'b10;
-  localparam WAIT_SEND_STATE = 2'b11;
+  localparam IDLE_STATE = 3'b000;
+  localparam WAIT_INSTR_STATE = 3'b001;
+  localparam CONT_MODE_STATE = 3'b010;
+  localparam DEBUG_MODE_STATE = 3'b011;
+  localparam SEND_DATA_MEM_STATE = 3'b100;
+  localparam SEND_DATA_REGS_STATE = 3'b101;
+  localparam SEND_DATA_LATCHES_STATE = 3'b110;
 
-  // opcodes
-  localparam ALU_DATA_A_OP = 8'b00000000;
-  localparam ALU_DATA_B_OP = 8'b00000001;
-  localparam GET_RESULT_OP = 8'b00000010;
-  localparam ALU_OPERATOR_OP = 8'b00000011;
+  // UART commands/opcodes
+  localparam LOAD_INSTR_OP = 8'b00000000;
+  localparam START_CONT_OP = 8'b00000001;
+  localparam START_DEBUG_OP = 8'b00000010;
+  localparam STEP_OP = 8'b00000011;
+  localparam END_DEBUG_OP = 8'b00000100;
 
-  reg [1:0] state, next_state;
-  reg [7:0] opcode, next_opcode;
-  reg [NB_DATA-1:0] alu_data_A, next_alu_data_A;
-  reg [NB_DATA-1:0] alu_data_B, next_alu_data_B;
-  reg [NB_ALU_OP-1:0] alu_op, next_alu_op;
+  // Halt instruction
+  localparam HALT_INSTR = 32'hffffffff;
+
+  // para memoria de datos
+  localparam NB_MEM_ADDR = 8;
+  localparam MAX_DATOS = 2 ** NB_MEM_ADDR / 4;  // 4 bytes por dato
+  reg [MAX_DATOS-1:0] used_mem;  // 1 bit per mem addr
+
+  reg tx_sending;
+  reg [2:0] state, next_state;
+  // variables
+  reg debug_mode, next_debug_mode;  // 0: cont, 1: debug
   reg [NB_DATA-1:0] tx_data, next_tx_data;
   reg tx_start, next_tx_start;
-  reg opcode_error_flag, next_opcode_error_flag;
+  reg reset_pipeline, next_reset_pipeline;
+  reg stop, next_stop;
+  reg write_instruction_mem;
+  reg [31:0] instruction_mem_addr, next_instruction_mem_addr;
+  reg [31:0] instruction_mem_data, next_instruction_mem_data;
+  reg [4:0] r_addr_registers, next_r_addr_registers;
+  reg [31:0] r_addr_data_mem, next_r_addr_data_mem;
+  reg [1:0] sending_latches, next_sending_latches;  // 0: IF_ID, 1: ID_EX, 2: EX_MEM, 3: MEM_WB
+  reg [31:0] counter, next_counter;
+
+  // EX_MEM latches
+  wire [31:0] ALU_result_EX_MEM;
+  wire MEM_write_EX_MEM;
+
 
   always @(posedge i_clk) begin
     if (i_reset) begin
       state <= IDLE_STATE;
-      opcode <= 2'b00;
-      alu_data_A <= 0;
-      alu_data_B <= 0;
-      alu_op <= 0;
       tx_data <= 0;
       tx_start <= 0;
-      opcode_error_flag <= 0;
+
+      reset_pipeline <= 1;
+      stop <= 1;
+      instruction_mem_addr <= 0;
+      instruction_mem_data <= 0;
+      r_addr_registers <= 0;
+      r_addr_data_mem <= 0;
+      counter <= 0;
+      debug_mode <= 0;
+      tx_sending <= 0;
+      sending_latches <= 0;
     end else begin
       state <= next_state;
-      opcode <= next_opcode;
-      alu_data_A <= next_alu_data_A;
-      alu_data_B <= next_alu_data_B;
-      alu_op <= next_alu_op;
       tx_data <= next_tx_data;
       tx_start <= next_tx_start;
-      opcode_error_flag <= next_opcode_error_flag;
+
+      stop <= next_stop;
+      reset_pipeline <= next_reset_pipeline;
+      instruction_mem_addr <= next_instruction_mem_addr;
+      instruction_mem_data <= next_instruction_mem_data;
+      r_addr_registers <= next_r_addr_registers;
+      r_addr_data_mem <= next_r_addr_data_mem;
+      counter <= next_counter;
+      debug_mode <= next_debug_mode;
+      sending_latches <= next_sending_latches;
+
+      if (next_tx_start) begin
+        tx_sending <= 1;
+      end else if (i_tx_done) begin
+        tx_sending <= 0;
+      end
     end
   end
 
-  always @(*) begin
+  always @(*) begin : next_state_logic
     next_state = state;
-    next_opcode = opcode;
-
-    next_alu_data_A = alu_data_A;
-    next_alu_data_B = alu_data_B;
-    next_alu_op = alu_op;
-    next_tx_data = tx_data;
-    next_tx_start = 1'b0;
-    next_opcode_error_flag = opcode_error_flag;
 
     case (state)
       IDLE_STATE: begin
+        // wait for command
         if (i_rx_done) begin
           // check opcode
-          next_opcode = i_rx_data;
           case (i_rx_data)
-            GET_RESULT_OP: begin
-              next_state = SEND_STATE;
-            end
+            LOAD_INSTR_OP:  next_state = WAIT_INSTR_STATE;
+            START_CONT_OP:  next_state = CONT_MODE_STATE;
+            START_DEBUG_OP: next_state = DEBUG_MODE_STATE;
 
-            ALU_DATA_A_OP: begin
-              next_state = LOAD_STATE;
-            end
-
-            ALU_DATA_B_OP: begin
-              next_state = LOAD_STATE;
-            end
-
-            ALU_OPERATOR_OP: begin
-              next_state = LOAD_STATE;
-            end
-
-            default: begin
-              next_opcode_error_flag = 1'b1;
-              next_state = SEND_STATE;
-            end
+            // unknown or not valid command in this state
+            default: next_state = IDLE_STATE;
           endcase
-
         end
       end
 
-      LOAD_STATE: begin
-        // wait for value
-        if (i_rx_done) begin
-          case (opcode)
-            ALU_DATA_A_OP: begin
-              next_alu_data_A = i_rx_data;
-            end
-            ALU_DATA_B_OP: begin
-              next_alu_data_B = i_rx_data;
-            end
-            ALU_OPERATOR_OP: begin
-              next_alu_op = i_rx_data[NB_ALU_OP-1:0];
-            end
-            default: begin
-              // do nothing
-            end
-          endcase
-
+      WAIT_INSTR_STATE: begin
+        // wait for halt instruction
+        if (counter == 4 && instruction_mem_data == HALT_INSTR) begin
           next_state = IDLE_STATE;
         end
       end
 
-      SEND_STATE: begin
-        // send alu result
-        if (opcode_error_flag) begin
-          next_opcode_error_flag = 1'b0;
-          next_tx_data = 8'b11111111;
-        end else begin
-          next_tx_data = i_alu_data_out;
+      CONT_MODE_STATE: begin
+        if (i_end) begin
+          next_state = SEND_DATA_MEM_STATE;
         end
-        next_tx_start = 1'b1;
-        next_state = IDLE_STATE;
+      end
+
+      DEBUG_MODE_STATE: begin
+        // wait for command
+        if (i_rx_done) begin
+          // check opcode
+          case (i_rx_data)
+            STEP_OP: next_state = SEND_DATA_MEM_STATE;
+            END_DEBUG_OP: next_state = IDLE_STATE;
+            default: next_state = DEBUG_MODE_STATE;
+          endcase
+        end
+      end
+
+      SEND_DATA_MEM_STATE: begin
+        if (counter == (MAX_DATOS * 4)) begin
+          next_state = SEND_DATA_REGS_STATE;
+        end
+      end
+
+      SEND_DATA_REGS_STATE: begin
+        if (counter == (32 * 4)) begin
+          next_state = SEND_DATA_LATCHES_STATE;
+        end
+      end
+
+      SEND_DATA_LATCHES_STATE: begin
+        if (sending_latches == 2'b11 && counter == $ceil(NB_MEM_WB / 8)) begin
+          // se envio el ultimo latch intermedio, finalizar envio de datos
+          if (debug_mode) begin
+            next_state = DEBUG_MODE_STATE;  // finished step
+          end else begin
+            next_state = IDLE_STATE;  // finished program
+          end
+        end
       end
 
       default: next_state = IDLE_STATE;
     endcase
   end
 
+  always @(*) begin : output_logic
+    // vuelven a cero (se ponen en 1 solo 1 ciclo)
+    next_tx_start = 1'b0;
+    write_instruction_mem = 0;
+    // guardan el valor actual
+    next_tx_data = tx_data;
+    next_reset_pipeline = reset_pipeline;
+    next_stop = stop;
+    next_instruction_mem_addr = instruction_mem_addr;
+    next_instruction_mem_data = instruction_mem_data;
+    next_r_addr_registers = r_addr_registers;
+    next_r_addr_data_mem = r_addr_data_mem;
+    next_counter = counter;
+    next_debug_mode = debug_mode;
+    next_sending_latches = sending_latches;
+
+    case (state)
+      IDLE_STATE: begin
+        // keep pipeline stopped
+        next_reset_pipeline = 1;
+        next_stop = 1;
+        next_counter = 0;
+        next_debug_mode = 0;
+        next_sending_latches = 0;
+      end
+
+      WAIT_INSTR_STATE: begin
+        next_reset_pipeline = 0;
+        next_stop = 1;
+        if (i_rx_done) begin
+          // recibe primero el byte MSB
+          next_instruction_mem_data = {instruction_mem_data[23:0], i_rx_data};
+          next_counter = counter + 1;
+        end
+
+        if (counter == 4) begin
+          // write instruction to mem
+          next_counter = 0;
+          next_instruction_mem_addr = instruction_mem_addr + 4;
+          write_instruction_mem = 1;  // se habilita escritura en este ciclo
+        end
+      end
+
+      DEBUG_MODE_STATE: begin
+        next_debug_mode = 1;
+        next_stop = 1;
+        if (i_rx_done && i_rx_data == STEP_OP) begin
+          // enable pipeline for one clock
+          next_stop = 0;
+        end
+      end
+
+      CONT_MODE_STATE: begin
+        next_reset_pipeline = 0;
+        next_stop = 0;
+        next_debug_mode = 0;
+      end
+
+      SEND_DATA_MEM_STATE: begin
+        next_stop = 1;
+        if (!tx_sending) begin  // esperar que se termine de mandar lo que se estaba mandando
+          if (counter == (MAX_DATOS * 4)) begin
+            // se pasaron por todas las posiciones de memoria
+            next_counter = 0;
+            next_r_addr_data_mem = 0;
+          end else begin
+            if (used_mem[r_addr_data_mem[NB_MEM_ADDR:2]]) begin
+              // enviar dato, primero el MSByte
+              next_tx_start = 1;
+              next_tx_data  = i_r_data_data_mem[(31-counter*8)-:8];
+              next_counter  = counter + 1;  // contador de bytes
+
+              if (counter[1:0] == 2'b11) begin
+                // se enviaron todos los bytes de esta palabra, avanzar a la siguiente direccion
+                next_r_addr_data_mem = r_addr_data_mem + 4;
+              end
+
+            end else begin
+              // posicion no usada, no enviar
+              next_counter = counter + 4;
+              next_r_addr_data_mem = r_addr_data_mem + 4;
+            end
+          end
+        end
+      end
+
+      SEND_DATA_REGS_STATE: begin
+        next_stop = 1;
+        if (!tx_sending) begin
+          next_counter = counter + 1;
+
+          case (sending_latches)
+            2'b00: begin
+              if (counter == $ceil(NB_IF_ID / 8)) begin
+                next_counter = 0;
+                next_sending_latches = 2'b01;
+              end else begin
+                next_tx_start = 1;
+                next_tx_data  = i_IF_ID[(NB_IF_ID-1-counter*8)-:8];
+              end
+            end
+
+            2'b01: begin
+              if (counter == $ceil(NB_ID_EX / 8)) begin
+                next_counter = 0;
+                next_sending_latches = 2'b10;
+              end else begin
+                next_tx_start = 1;
+                next_tx_data  = i_ID_EX[(NB_ID_EX-1-counter*8)-:8];
+              end
+            end
+
+            2'b10: begin
+              if (counter == $ceil(NB_EX_MEM / 8)) begin
+                next_counter = 0;
+                next_sending_latches = 2'b11;
+              end else begin
+                next_tx_start = 1;
+                next_tx_data  = i_EX_MEM[(NB_EX_MEM-1-counter*8)-:8];
+              end
+            end
+
+            2'b11: begin
+              if (counter == $ceil(NB_MEM_WB / 8)) begin
+                next_counter = 0;
+                next_sending_latches = 2'b00;
+              end else begin
+                next_tx_start = 1;
+                next_tx_data  = i_MEM_WB[(NB_MEM_WB-1-counter*8)-:8];
+              end
+            end
+
+            default: begin
+              next_tx_start = 1;
+              next_tx_data  = 0;
+            end
+
+          endcase
+        end
+      end
+
+      SEND_DATA_LATCHES_STATE: begin
+        next_stop = 1;
+        if (!tx_sending) begin
+          if (counter == (NB_IF_ID / 8)) begin
+            next_counter = 0;
+          end else begin
+            // enviar IF_ID latch
+            next_tx_start = 1;
+            next_tx_data  = i_r_data_registers[(NB_IF_ID-1-counter*8)-:8];
+            next_counter  = counter + 1;  // contador de bytes enviados
+          end
+        end
+      end
+
+      default: begin
+        next_tx_start = 1'b0;
+        next_tx_data = 0;
+        next_reset_pipeline = 1;
+        next_stop = 1;
+        write_instruction_mem = 0;
+        next_instruction_mem_addr = 0;
+        next_instruction_mem_data = 0;
+        next_r_addr_registers = 0;
+        next_r_addr_data_mem = 0;
+        next_counter = 0;
+        next_debug_mode = 0;
+        next_sending_latches = 0;
+      end
+    endcase
+  end
+
+
+  always @(posedge i_clk) begin : used_mem_logic
+    if (i_reset || o_reset_pipeline) begin
+      used_mem <= {MAX_DATOS{1'b0}};
+    end else begin
+      // check if mem is written
+      if (MEM_write_EX_MEM) begin
+        used_mem[ALU_result_EX_MEM[NB_MEM_ADDR:2]] <= 1'b1;  // :2 porque la memoria va de a 4 bytes
+      end
+    end
+
+  end
+
   assign o_tx_data = tx_data;
-  assign o_alu_op = alu_op;
-  assign o_alu_data_A = alu_data_A;
-  assign o_alu_data_B = alu_data_B;
   assign o_tx_start = tx_start;
 
+  assign o_reset_pipeline = reset_pipeline;
+  assign o_stop = stop;
+  assign o_write_instruction_mem = write_instruction_mem;
+  assign o_instruction_mem_addr = instruction_mem_addr;
+  assign o_instruction_mem_data = instruction_mem_data;
+  assign o_r_addr_registers = r_addr_registers;
+  assign o_r_addr_data_mem = r_addr_data_mem;
+
+  wire [4:0] write_reg_EX_MEM;
+  wire [31:0] data_to_write_in_MEM;
+  wire WB_write_EX_MEM;
+  wire WB_mem_to_reg_EX_MEM;
+  wire MEM_read_EX_MEM;
+  wire MEM_unsigned_EX_MEM;
+  wire [1:0] MEM_byte_half_word_EX_MEM;
+  assign {
+      write_reg_EX_MEM,
+      data_to_write_in_MEM,
+      ALU_result_EX_MEM,
+      WB_write_EX_MEM,
+      WB_mem_to_reg_EX_MEM,
+      MEM_read_EX_MEM,
+      MEM_write_EX_MEM,
+      MEM_unsigned_EX_MEM,
+      MEM_byte_half_word_EX_MEM
+      } = i_EX_MEM;
 endmodule
