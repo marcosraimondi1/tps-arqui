@@ -9,11 +9,11 @@ module uart_interface_tb;
   localparam END_DEBUG_OP = 8'b00000100;
 
   // Parameters
-  parameter NB_DATA   = 8;
-    parameter NB_IF_ID  = 64;
-    parameter NB_ID_EX  = 144;  // 139,
-    parameter NB_EX_MEM = 80;   // 76,
-    parameter NB_MEM_WB = 72;   // 71
+  parameter NB_DATA = 8;
+  parameter NB_IF_ID = 64;
+  parameter NB_ID_EX = 144;  // 139,
+  parameter NB_EX_MEM = 80;  // 76,
+  parameter NB_MEM_WB = 72;  // 71
 
   // Inputs
   reg i_clk;
@@ -266,17 +266,17 @@ module uart_interface_tb;
     #60;
     i_rx_done = 0;
     if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1);
-    
+
     i_rx_data = STEP_OP;
     i_rx_done = 1;
     #20;
     i_rx_done = 0;
     if (o_stop !== 0) $fatal("Error: o_stop = %d, expected %d", o_stop, 0);
-    
+
     #20;
     // state == send_state
-    if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1); 
-    
+    if (o_stop !== 1) $fatal("Error: o_stop = %d, expected %d", o_stop, 1);
+
     // no tiene que enviar datos de memoria
 
     // se tienen que enviar 32 registros = 128 bytes
@@ -292,10 +292,10 @@ module uart_interface_tb;
       #20 i_tx_done = 1;
       #20 i_tx_done = 0;
     end
-    
+
     #60;
     // Test 4: END_DEBUG_OP
-    
+
     i_rx_data = END_DEBUG_OP;
     i_rx_done = 1;
     #20 i_rx_done = 0;

@@ -3,7 +3,7 @@
 module baudRateGen_tb;
 
   // Parametros
-  localparam NCYCLES_PER_TICK = 50_000_000 / 19200 / 16;
+  localparam NCYCLES_PER_TICK = (50_000_000 + (19200*16-1)) / (19200 * 16);
 
   integer i;  // Contador de iteraciones
   integer j;

@@ -119,7 +119,7 @@ module etapa_mem (
   end
 
 
-  assign mem_addr = i_halt ? i_r_addr : i_ALU_result[11:0];
+  assign mem_addr = i_halt ? i_r_addr : i_ALU_result[7:0];
   assign o_r_data = read_data_wire;
   assign write_enable = i_MEM_write & ~i_halt;
 
