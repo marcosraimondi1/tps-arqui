@@ -1,9 +1,9 @@
 module uart_interface #(
     parameter NB_DATA   = 8,
     parameter NB_IF_ID  = 64,
-    parameter NB_ID_EX  = 144,  // 139,
-    parameter NB_EX_MEM = 80,   // 76,
-    parameter NB_MEM_WB = 72    // 71
+    parameter NB_ID_EX  = 168,
+    parameter NB_EX_MEM = 88,
+    parameter NB_MEM_WB = 80
 ) (
     input wire i_clk,
     input wire i_reset,
@@ -145,7 +145,7 @@ module uart_interface #(
 
       CONT_MODE_STATE: begin
         if (i_end) begin
-          next_state = SEND_DATA_MEM_STATE;
+          next_state = SEND_DATA_REGS_STATE;
         end
       end
 
@@ -154,7 +154,7 @@ module uart_interface #(
         if (i_rx_done) begin
           // check opcode
           case (i_rx_data)
-            STEP_OP: next_state = SEND_DATA_MEM_STATE;
+            STEP_OP: next_state = SEND_DATA_REGS_STATE;
             END_DEBUG_OP: next_state = IDLE_STATE;
             default: next_state = DEBUG_MODE_STATE;
           endcase
@@ -162,8 +162,12 @@ module uart_interface #(
       end
 
       SEND_DATA_MEM_STATE: begin
-        if (!tx_sending && counter == (MAX_DATOS * 4)) begin
-          next_state = SEND_DATA_REGS_STATE;
+        if (!tx_sending && counter == (MAX_DATOS * 4 + MAX_DATOS / 8)) begin
+          if (debug_mode) begin
+            next_state = DEBUG_MODE_STATE;  // finished step
+          end else begin
+            next_state = IDLE_STATE;  // finished program
+          end
         end
       end
 
@@ -176,11 +180,7 @@ module uart_interface #(
       SEND_DATA_LATCHES_STATE: begin
         if (!tx_sending && sending_latches == 2'b11 && counter == (NB_MEM_WB / 8)) begin
           // se envio el ultimo latch intermedio, finalizar envio de datos
-          if (debug_mode) begin
-            next_state = DEBUG_MODE_STATE;  // finished step
-          end else begin
-            next_state = IDLE_STATE;  // finished program
-          end
+          next_state = SEND_DATA_MEM_STATE;
         end
       end
 
@@ -215,6 +215,12 @@ module uart_interface #(
         next_instruction_mem_addr = 0;
         next_r_addr_data_mem = 0;
         next_r_addr_registers = 0;
+
+        if (i_rx_done) begin
+          // echo back received command
+          next_tx_start = 1;
+          next_tx_data  = i_rx_data;
+        end
       end
 
       WAIT_INSTR_STATE: begin
@@ -252,26 +258,33 @@ module uart_interface #(
       SEND_DATA_MEM_STATE: begin
         next_stop = 1;
         if (!tx_sending) begin  // esperar que se termine de mandar lo que se estaba mandando
-          if (counter == (MAX_DATOS * 4)) begin
+          if (counter == (MAX_DATOS * 4 + MAX_DATOS / 8)) begin
             // se pasaron por todas las posiciones de memoria
             next_counter = 0;
             next_r_addr_data_mem = 0;
           end else begin
-            if (used_mem[r_addr_data_mem[NB_MEM_ADDR:2]]) begin
-              // enviar dato, primero el MSByte
-              next_tx_start = 1;
-              next_tx_data  = i_r_data_data_mem[(31-counter[1:0]*8)-:8];
-              next_counter  = counter + 1;  // contador de bytes
+            if (counter < (MAX_DATOS * 4)) begin
+              if (used_mem[r_addr_data_mem[NB_MEM_ADDR:2]]) begin
+                // enviar dato, primero el MSByte
+                next_tx_start = 1;
+                next_tx_data  = i_r_data_data_mem[(31-counter[1:0]*8)-:8];
+                next_counter  = counter + 1;  // contador de bytes
 
-              if (counter[1:0] == 2'b11) begin
-                // se enviaron todos los bytes de esta palabra, avanzar a la siguiente direccion
+                if (counter[1:0] == 2'b11) begin
+                  // se enviaron todos los bytes de esta palabra, avanzar a la siguiente direccion
+                  next_r_addr_data_mem = r_addr_data_mem + 4;
+                end
+
+              end else begin
+                // posicion no usada, no enviar
+                next_counter = counter + 4;
                 next_r_addr_data_mem = r_addr_data_mem + 4;
               end
-
             end else begin
-              // posicion no usada, no enviar
-              next_counter = counter + 4;
-              next_r_addr_data_mem = r_addr_data_mem + 4;
+              // send used_mem data
+              next_tx_start = 1;
+              next_tx_data  = used_mem[(counter-MAX_DATOS*4)*8+:8];
+              next_counter  = counter + 1;  // contador de bytes
             end
           end
         end
@@ -311,6 +324,14 @@ module uart_interface #(
               end else begin
                 next_tx_start = 1;
                 next_tx_data  = i_IF_ID[(NB_IF_ID-1-counter*8)-:8];
+                // instruction[31:24] (primer byte)
+                // instruction[23:16] (segundo byte)
+                // instruction[15:8] (tercer byte)
+                // instruction[7:0] (cuarto byte)
+                // pc4[31:24] (quinto byte)
+                // pc4[23:16] (sexto byte)
+                // pc4[15:8] (septimo byte)
+                // pc4[7:0] (octavo byte)
               end
             end
 

@@ -8,6 +8,7 @@ class Assembler:
         self.debug = debug
         self.asm_tokens = []
         self.binary_code = ""
+        self.byte_code = []
 
     def compile(self):
         try:
@@ -25,14 +26,13 @@ class Assembler:
 
 
     def write_output(self):
-        num_byte = []
         for i in range(int(len(self.binary_code)/8)):
             num =   int(self.binary_code[i*8:(i+1)*8],2)
-            num_byte.append(num)
+            self.byte_code.append(num)
 
         try:
             out_file = open(self.output_path, "wb")
-            out_file.write((''.join(chr(i) for i in num_byte)).encode('charmap'))
+            out_file.write((''.join(chr(i) for i in self.byte_code)).encode('charmap'))
             out_file.close()
         except Exception as e:
             print(f'Error al escribir el archivo de salida: {e}')
@@ -316,17 +316,4 @@ class Assembler:
         target = self.str_to_bin_str(target, 26)
         return inst[0:6] + target
 
-
-def main():
-    parser = argparse.ArgumentParser(prog='compiler.py', description='Compilador de MIPS IV a binario')
-    parser.add_argument('file_path', type=str, help='Ruta del archivo .asm a compilar')
-    parser.add_argument('-o', '--output', type=str, help='Ruta del archivo de salida, por defecto output.hex', default="output.hex")
-    parser.add_argument('-v', '--verbose', action='store_true', help='Muestra información adicional')
-    args = parser.parse_args()
-
-    asm = Assembler(args.file_path, args.output, args.verbose)
-    asm.compile()
-
-if __name__ == "__main__":
-    main()
 

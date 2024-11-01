@@ -1,8 +1,8 @@
 module pipeline #(
     parameter NB_IF_ID  = 64,
-    parameter NB_ID_EX  = 139,
-    parameter NB_EX_MEM = 76,
-    parameter NB_MEM_WB = 71
+    parameter NB_ID_EX  = 168,
+    parameter NB_EX_MEM = 88,
+    parameter NB_MEM_WB = 80
 ) (
     input wire i_clk,
     input wire i_reset,
@@ -260,7 +260,7 @@ module pipeline #(
       .i_rt_EX(rt),
       .i_mem_read_EX(MEM_read__out_decode),
 
-      .i_salto_con_registro(salto_con_registro),  // 00 no salto, 01 salto usando rs y rt, 10 salto usando rs
+      .i_salto_con_registro(salto_con_registro),  // 00 no salto, 01 salto usando rs y rt, 10 salto
       .i_reg_dst_EX(reg_dst_EX),
       .i_reg_dst_MEM(write_reg__out_execute),
       .i_reg_dst_WB(write_reg__out_mem),
@@ -282,46 +282,84 @@ module pipeline #(
     pc4  // 32 bits
   };  // total 64 bits
 
+  wire [7:0] rs_byte;
+  wire [7:0] rt_byte;
+  wire [7:0] rd_byte;
+  wire [7:0] funct_byte;
+  wire [7:0] opcode_byte;
+  wire [7:0] shamt_byte;
+  wire [7:0] WB_ctrl_byte_ID_EX;
+  wire [7:0] MEM_ctrl_byte_ID_EX;
+  wire [7:0] EX_ctrl_byte_ID_EX;
+
+  assign rs_byte = {3'b0, rs};
+  assign rt_byte = {3'b0, rt};
+  assign rd_byte = {3'b0, rd};
+  assign funct_byte = {2'b0, funct};
+  assign opcode_byte = {2'b0, opcode};
+  assign shamt_byte = {3'b0, shamt};
+  assign WB_ctrl_byte_ID_EX = {6'b0, WB_write__out_decode, WB_mem_to_reg__out_decode};
+  assign MEM_ctrl_byte_ID_EX = {
+    3'b0,
+    MEM_read__out_decode,
+    MEM_write__out_decode,
+    MEM_unsigned__out_decode,
+    MEM_byte_half_word__out_decode
+  };
+  assign EX_ctrl_byte_ID_EX = {
+    4'b0, EX_alu_src__out_decode, EX_reg_dst__out_decode, EX_alu_op__out_decode
+  };
+
   assign o_ID_EX = {
     RA,  // 32 bits
     RB,  // 32 bits
-    rs,  // 5 bits
-    rt,  // 5 bits
-    rd,  // 5 bits
-    funct,  // 6 bits
+    rs_byte,  // 8 bits
+    rt_byte,  // 8 bits
+    rd_byte,  // 8 bits
+    funct_byte,  // 8 bits
     inmediato,  // 32 bits
-    opcode,  // 6 bits
-    shamt,  // 5 bits
-    WB_write__out_decode,  // 1 bit
-    WB_mem_to_reg__out_decode,  // 1 bit
-    MEM_read__out_decode,  // 1 bit
-    MEM_write__out_decode,  // 1 bit
-    MEM_unsigned__out_decode,  // 1 bit
-    MEM_byte_half_word__out_decode,  // 2 bits
-    EX_alu_src__out_decode,  // 1 bit
-    EX_reg_dst__out_decode,  // 1 bit
-    EX_alu_op__out_decode  // 2 bits
-  };  // total 139 bits
+    opcode_byte,  // 8 bits
+    shamt_byte,  // 8 bits
+    WB_ctrl_byte_ID_EX,  // 8 bits
+    MEM_ctrl_byte_ID_EX,  // 8 bits
+    EX_ctrl_byte_ID_EX  // 8 bits
+  };  // total 168 bits
+
+
+  wire [7:0] write_reg_byte_EX_MEM;
+  wire [7:0] MEM_ctrl_byte_EX_MEM;
+  wire [7:0] WB_ctrl_byte_EX_MEM;
+
+  assign write_reg_byte_EX_MEM = {3'b0, write_reg__out_execute};
+  assign WB_ctrl_byte_EX_MEM = {6'b0, WB_write__out_execute, WB_mem_to_reg__out_execute};
+  assign MEM_ctrl_byte_EX_MEM = {
+    3'b0,
+    MEM_read__out_execute,
+    MEM_write__out_execute,
+    MEM_unsigned__out_execute,
+    MEM_byte_half_word__out_execute
+  };
 
   assign o_EX_MEM = {
-    write_reg__out_execute,  // 5 bits
+    write_reg_byte_EX_MEM,  // 8 bits
     data_to_write_in_MEM,  // 32 bits
     ALU_result__out_execute,  // 32 bits
-    WB_write__out_execute,  // 1 bit
-    WB_mem_to_reg__out_execute,  // 1 bit
-    MEM_read__out_execute,  // 1 bit
-    MEM_write__out_execute,  // 1 bit
-    MEM_unsigned__out_execute,  // 1 bit
-    MEM_byte_half_word__out_execute  // 2 bits
-  };  // total 76 bits
+    WB_ctrl_byte_EX_MEM,  // 8 bits
+    MEM_ctrl_byte_EX_MEM  // 8 bits
+  };  // total 88 bits
+
+
+  wire [7:0] write_reg_byte_MEM_WB;
+  wire [7:0] WB_ctrl_byte_MEM_WB;
+  assign write_reg_byte_MEM_WB = {3'b0, write_reg__out_mem};
+  assign WB_ctrl_byte_MEM_WB = {6'b0, WB_write__out_mem, WB_mem_to_reg__out_mem};
 
   assign o_MEM_WB = {
     ALU_result__out_mem,  // 32 bits
     read_data_from_mem,  // 32 bits
-    write_reg__out_mem,  // 5 bits
-    WB_write__out_mem,  // 1 bit
-    WB_mem_to_reg__out_mem  // 1 bit
-  };  // total 71 bits
+    write_reg_byte_MEM_WB,  // 8 bits
+    WB_ctrl_byte_MEM_WB  // 8 bits
+  };  // total 80 bits
 
   assign o_end = halt_from_instruction;
 

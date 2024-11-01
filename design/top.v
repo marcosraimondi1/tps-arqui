@@ -1,9 +1,9 @@
 module top #(
     parameter NB_DATA   = 8,
     parameter NB_IF_ID  = 64,
-    parameter NB_ID_EX  = 144,  // 139,
-    parameter NB_EX_MEM = 80,   // 76,
-    parameter NB_MEM_WB = 72    // 71
+    parameter NB_ID_EX  = 168,
+    parameter NB_EX_MEM = 88,
+    parameter NB_MEM_WB = 80
 ) (
     input  wire sys_clk100,
     input  wire i_reset,
