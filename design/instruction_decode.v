@@ -120,9 +120,6 @@ module instruction_decode (
             o_WB_mem_to_reg <= o_WB_mem_to_reg;  // no importa el valor
           end
         end
-      end else begin
-        o_WB_write <= 1'b0;
-        o_WB_mem_to_reg <= 1'b0;
       end
     end
   end
@@ -135,7 +132,7 @@ module instruction_decode (
       o_MEM_byte_half_word <= 2'b00;  // 00 byte, 01 half word, 11 word
     end else begin
       if (!i_halt) begin
-        if (i_stall) begin
+        if (i_stall || NOP == i_instruction) begin
           o_MEM_read <= 1'b0;
           o_MEM_write <= 1'b0;
           o_MEM_unsigned <= 1'b0;  // 1 unsigned 0 signed
@@ -160,9 +157,6 @@ module instruction_decode (
             o_MEM_write <= 1'b0;
           end
         end
-      end else begin
-        o_MEM_read  <= 1'b0;
-        o_MEM_write <= 1'b0;
       end
     end
   end
@@ -174,7 +168,7 @@ module instruction_decode (
       o_EX_alu_op  <= 2'b00;
     end else begin
       if (!i_halt) begin
-        if (i_stall) begin
+        if (i_stall || NOP == i_instruction) begin
           o_EX_reg_dst <= 1'b0;
           o_EX_alu_src <= 1'b0;
           o_EX_alu_op  <= 2'b00;
@@ -210,10 +204,6 @@ module instruction_decode (
             o_EX_alu_op <= 2'b01;
           end
         end
-      end else begin
-        o_EX_reg_dst <= 1'b0;
-        o_EX_alu_src <= 1'b0;
-        o_EX_alu_op  <= 2'b00;
       end
     end
   end

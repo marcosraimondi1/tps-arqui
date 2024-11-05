@@ -77,14 +77,14 @@ module pipeline #(
   instruction_decode instruction_decode1 (
       .i_clk(i_clk),
       .i_reset(i_reset),
-      .i_halt(halt),
+      .i_halt(i_stop),
       .i_pc4(pc4),
       .i_instruction(instruction),
       .i_write_enable_WB(write_enable_WB),
       .i_register_WB(register_WB),
       .i_data_WB(data_WB),
       // senal de stall del detector de riesgos
-      .i_stall(stall),
+      .i_stall(stall || halt_from_instruction),
       .o_RA(RA),
       .o_RB(RB),
       .o_rs(rs),

@@ -69,12 +69,7 @@ def run_debug():
         if option == 1:
             send_opcode(STEP_OP)
             data = get_data()
-            print("Registers: ", data["registers"])
-            print("IF_ID: ", data["latch1"])
-            print("ID_EX: ", data["latch2"])
-            print("EX_MEM: ", data["latch3"])
-            print("MEM_WB: ", data["latch4"])
-            print("Mem: ", data["mem"])
+            print_data(data)
         elif option == 2:
             send_opcode(END_DEBUG_OP)
             break
@@ -84,33 +79,32 @@ def run_debug():
 def run_continuous():
     send_opcode(START_CONT_OP)
     data = get_data()
-    print("Registers: ", data["registers"])
-    print("IF_ID: ", data["if_id"])
-    print("ID_EX: ", data["id_ex"])
-    print("EX_MEM: ", data["ex_mem"])
-    print("MEM_WB: ", data["mem_wb"])
-    print("Mem: ", data["mem"])
+    print_data(data)
+
+def print_data(data):
+    print(data)
+
 
 def get_data():
 
-    print("waiting for registers")
+    # print("waiting for registers")
     reg_data = receive_registers()
-    print(reg_data)
-    print("waiting for IF_ID")
+    # print(reg_data)
+    # print("waiting for IF_ID")
     latch1_data = receive_latch("IF_ID")
-    print(latch1_data)
-    print("waiting for ID_EX")
+    # print(latch1_data)
+    # print("waiting for ID_EX")
     latch2_data = receive_latch("ID_EX")
-    print(latch2_data)
-    print("waiting for EX_MEM")
+    # print(latch2_data)
+    # print("waiting for EX_MEM")
     latch3_data = receive_latch("EX_MEM")
-    print(latch3_data)
-    print("waiting for MEM_WB")
+    # print(latch3_data)
+    # print("waiting for MEM_WB")
     latch4_data = receive_latch("MEM_WB")
-    print(latch4_data)
-    print("waiting for mem")
+    # print(latch4_data)
+    # print("waiting for mem")
     mem_data = receive_mem()
-    print(mem_data)
+    # print(mem_data)
 
     registers = decode_registers(reg_data)
     latch1 = decode_latch("IF_ID", latch1_data)
@@ -134,6 +128,7 @@ def get_data():
 def send_instructions(instructions):
     send_opcode(LOAD_INSTR_OP)
     for instr in instructions:
+        instr = instr.to_bytes(1, byteorder='big')
         print("Sending instruction byte: ", instr)
         ser.write(instr)
         recv = ser.read(1)

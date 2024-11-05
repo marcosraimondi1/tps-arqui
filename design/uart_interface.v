@@ -213,6 +213,7 @@ module uart_interface #(
         next_debug_mode = 0;
         next_sending_latches = 0;
         next_instruction_mem_addr = 0;
+        next_instruction_mem_data = 0;
         next_r_addr_data_mem = 0;
         next_r_addr_registers = 0;
 
