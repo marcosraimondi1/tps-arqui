@@ -126,7 +126,7 @@ module top #(
       .NB_MEM_WB(NB_MEM_WB)
   ) pipeline1 (
       .i_clk(clk),
-      .i_reset(i_reset),
+      .i_reset(o_reset_pipeline),
       .i_stop(stop_pipeline),
       .i_write_instruction_mem(write_instruction_mem),
       .i_instruction_mem_addr(instruction_mem_addr),

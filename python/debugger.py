@@ -1,7 +1,6 @@
 import time
 import serial
 import compiler as cp
-import argparse
 
 BAUDRATE = 19200
 PORT = '/dev/ttyUSB1'
@@ -21,31 +20,97 @@ STEP_OP = bytes([0b00000011]);
 END_DEBUG_OP = bytes([0b00000100]);
 
 def main():
-    parser = argparse.ArgumentParser(prog='debugger.py', description='Debugger custom')
-    parser.add_argument('file_path', type=str, help='Ruta del archivo a compilar')
-    parser.add_argument('-o', '--output', type=str, help='Ruta del archivo de salida, por defecto output.hex', default="output.hex")
-    parser.add_argument('-v', '--verbose', action='store_true', help='Muestra información adicional')
-    args = parser.parse_args()
-
-    asm = cp.Assembler(args.file_path, args.output, args.verbose)
-    asm.compile()
 
     # enviar instrucciones
-    ser.open()
+    # ser.open()
 
-    send_opcode(LOAD_INSTR_OP)
-    send_instructions(asm.byte_code)
-    send_opcode(START_CONT_OP)
+    while True:
+        print("1. Cargar instrucciones")
+        print("2. Iniciar ejecución continua")
+        print("3. Iniciar ejecución paso a paso")
+        print("4. Salir")
+        print("5. Test Uart")
+        option = int(input("Ingrese la opción: "))
 
-    reg_data = receive_registers()
-    latch1_data = receive_latch("IF_ID")
-    latch2_data = receive_latch("ID_EX")
-    latch3_data = receive_latch("EX_MEM")
-    latch4_data = receive_latch("MEM_WB")
-    mem_data = receive_mem()
+        if option == 1:
+            path = input("Seleccione el archivo a cargar (path): ")
+            asm = cp.Assembler(path, "output.hex", True)
+            asm.compile()
+            send_instructions(asm.byte_code)
+        elif option == 2:
+            run_continuous()
+        elif option == 3:
+            run_debug()
+        elif option == 4:
+            break
+        elif option == 5:
+            while True:
+                tosend = input("Ingrese un entero a enviar: ")
+                if tosend == "exit":
+                    break
+                value = int(tosend)
+                tosend = value.to_bytes(1, byteorder='big')
+                ser.write(tosend)
 
+                print(f"Enviado: {tosend}, Recibido: {ser.read(1)}")
+        else:
+            print("Opción inválida")
 
     ser.close()
+
+def run_debug():
+    send_opcode(START_DEBUG_OP)
+
+    while True:
+        print("1. Step")
+        print("2. Salir")
+        option = int(input("Ingrese la opción: "))
+
+        if option == 1:
+            send_opcode(STEP_OP)
+            data = get_data()
+            print("Registers: ", data["registers"])
+            print("IF_ID: ", data["latch1"])
+            print("ID_EX: ", data["latch2"])
+            print("EX_MEM: ", data["latch3"])
+            print("MEM_WB: ", data["latch4"])
+            print("Mem: ", data["mem"])
+        elif option == 2:
+            send_opcode(END_DEBUG_OP)
+            break
+        else:
+            print("Opción inválida")
+
+def run_continuous():
+    send_opcode(START_CONT_OP)
+    data = get_data()
+    print("Registers: ", data["registers"])
+    print("IF_ID: ", data["if_id"])
+    print("ID_EX: ", data["id_ex"])
+    print("EX_MEM: ", data["ex_mem"])
+    print("MEM_WB: ", data["mem_wb"])
+    print("Mem: ", data["mem"])
+
+def get_data():
+
+    print("waiting for registers")
+    reg_data = receive_registers()
+    print(reg_data)
+    print("waiting for IF_ID")
+    latch1_data = receive_latch("IF_ID")
+    print(latch1_data)
+    print("waiting for ID_EX")
+    latch2_data = receive_latch("ID_EX")
+    print(latch2_data)
+    print("waiting for EX_MEM")
+    latch3_data = receive_latch("EX_MEM")
+    print(latch3_data)
+    print("waiting for MEM_WB")
+    latch4_data = receive_latch("MEM_WB")
+    print(latch4_data)
+    print("waiting for mem")
+    mem_data = receive_mem()
+    print(mem_data)
 
     registers = decode_registers(reg_data)
     latch1 = decode_latch("IF_ID", latch1_data)
@@ -54,17 +119,30 @@ def main():
     latch4 = decode_latch("MEM_WB", latch4_data)
     mem = decode_mem(mem_data)
 
-    print("Registers: ", registers)
-    print("IF_ID: ", latch1)
-    print("ID_EX: ", latch2)
-    print("EX_MEM: ", latch3)
-    print("MEM_WB: ", latch4)
-    print("Mem: ", mem)
+    data = dict(
+        registers = registers,
+        if_id = latch1,
+        id_ex = latch2,
+        ex_mem = latch3,
+        mem_wb = latch4,
+        mem = mem
+    )
+
+    return data
+
 
 def send_instructions(instructions):
+    send_opcode(LOAD_INSTR_OP)
     for instr in instructions:
+        print("Sending instruction byte: ", instr)
         ser.write(instr)
-        time.sleep(0.25)
+        recv = ser.read(1)
+        print("Received: ", recv)
+        if recv != instr:
+            print("---------------------------------")
+            print("Error sending instruction", instr)
+            print("---------------------------------")
+
 
 def send_opcode(a):
     if (a not in [LOAD_INSTR_OP, START_CONT_OP, START_DEBUG_OP, STEP_OP, END_DEBUG_OP]):
@@ -72,8 +150,10 @@ def send_opcode(a):
         exit(1)
 
     # Set operator
+    print("Sending opcode: ", a)
     ser.write(a)
     recv = ser.read(1)
+    print("Received: ", recv)
     return recv
 
 MEM_SIZE=256 # memoria de 256 bytes (4 bytes es un dato)
@@ -103,12 +183,18 @@ def decode_mem(data):
         print("used_mem: ", used_mem)
         print("mem_data: ", mem_data)
 
-    return dict(
-        num_data = sum(used_mem),
-        mem_data = mem_data,
-        used_mem = used_mem
-    )
 
+    data_address = []
+    i = 0
+    for used in used_mem:
+        if used:
+            data_address.append(dict(
+                data = mem_data[i], 
+                address = i*4
+            ))
+            i += 1
+
+    return data_address
 
 def receive_registers():
     recv = ser.read(32*4)
@@ -147,33 +233,33 @@ def decode_latch(latch, data):
                 latch = "ID_EX",
                 RA=int.from_bytes(data[0:4], byteorder='big'),
                 RB=int.from_bytes(data[4:8], byteorder='big'),
-                rs=int.from_bytes(data[8], byteorder='big'),
-                rt=int.from_bytes(data[9], byteorder='big'),
-                rd=int.from_bytes(data[10], byteorder='big'),
-                funct=int.from_bytes(data[11], byteorder='big'),
+                rs=data[8],
+                rt=data[9],
+                rd=data[10],
+                funct=data[11],
                 inmediato=int.from_bytes(data[12:16], byteorder='big'),
-                opcode=int.from_bytes(data[16], byteorder='big'),
-                shamt=int.from_bytes(data[17], byteorder='big'),
-                WB_ctrl=int.from_bytes(data[18], byteorder='big'),
-                MEM_ctrl=int.from_bytes(data[19], byteorder='big'),
-                EX_ctrl=int.from_bytes(data[20], byteorder='big')
+                opcode=data[16],
+                shamt=data[17],
+                WB_ctrl=data[18],
+                MEM_ctrl=data[19],
+                EX_ctrl=data[20]
             )
     elif latch == "EX_MEM":
         return dict(
             latch = "EX_MEM",
-            write_reg=int.from_bytes(data[0], byteorder='big'),
+            write_reg=data[0],
             data_to_write=int.from_bytes(data[1:5], byteorder='big'),
             ALU_result=int.from_bytes(data[5:9], byteorder='big'),
-            WB_ctrl=int.from_bytes(data[9], byteorder='big'),
-            MEM_ctrl=int.from_bytes(data[10], byteorder='big')
+            WB_ctrl=data[9],
+            MEM_ctrl=data[10]
         )
     elif latch == "MEM_WB":
         return dict(
             latch = "MEM_WB",
             ALU_result=int.from_bytes(data[0:4], byteorder='big'),
             read_data_from_mem=int.from_bytes(data[4:8], byteorder='big'),
-            write_reg=int.from_bytes(data[8], byteorder='big'),
-            WB_ctrl=int.from_bytes(data[9], byteorder='big')
+            write_reg=data[8],
+            WB_ctrl=data[9]
         )
 
     return dict()

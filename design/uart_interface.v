@@ -219,7 +219,11 @@ module uart_interface #(
         if (i_rx_done) begin
           // echo back received command
           next_tx_start = 1;
-          next_tx_data  = i_rx_data;
+          if (i_rx_data == 8'hff) begin
+            next_tx_data = 8'h1d;
+          end else begin
+            next_tx_data = i_rx_data;
+          end
         end
       end
 
@@ -230,6 +234,9 @@ module uart_interface #(
           // recibe primero el byte MSB
           next_instruction_mem_data = {instruction_mem_data[23:0], i_rx_data};
           next_counter = counter + 1;
+
+          next_tx_start = 1;
+          next_tx_data = i_rx_data;
         end
 
         if (counter == 4) begin
@@ -238,14 +245,27 @@ module uart_interface #(
           next_instruction_mem_addr = instruction_mem_addr + 4;
           write_instruction_mem = 1;  // se habilita escritura en este ciclo
         end
+
       end
 
       DEBUG_MODE_STATE: begin
+        next_reset_pipeline = 0;
         next_debug_mode = 1;
         next_stop = 1;
-        if (i_rx_done && i_rx_data == STEP_OP) begin
-          // enable pipeline for one clock
-          next_stop = 0;
+
+        if (i_rx_done) begin
+          if (i_rx_data == STEP_OP) begin
+            // enable pipeline for one clock
+            next_stop = 0;
+          end
+
+          // echo back received command
+          next_tx_start = 1;
+          if (i_rx_data == 8'hff) begin
+            next_tx_data = 8'hde;
+          end else begin
+            next_tx_data = i_rx_data;
+          end
         end
       end
 
@@ -253,6 +273,15 @@ module uart_interface #(
         next_reset_pipeline = 0;
         next_stop = 0;
         next_debug_mode = 0;
+        if (i_rx_done) begin
+          // echo back received command
+          next_tx_start = 1;
+          if (i_rx_data == 8'hff) begin
+            next_tx_data = 8'hc0;
+          end else begin
+            next_tx_data = i_rx_data;
+          end
+        end
       end
 
       SEND_DATA_MEM_STATE: begin
