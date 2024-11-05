@@ -12,7 +12,6 @@ module instruction_fetch (
     output wire [31:0] o_pc4
 );
 
-  wire [31:0] pc;
   wire [31:0] instruction_from_mem;
   wire [31:0] instruction_addr;
 
@@ -23,8 +22,7 @@ module instruction_fetch (
       .i_jump(i_jump),  // pendiente revisar
       .i_stall(i_stall),  // Proviene de la unidad de deteción de riesgos
       .i_halt(i_halt),  // Proviene de la instrucción (HALT) ó de la debug unit
-      .o_pc(pc),
-      .o_pc4(o_pc4)
+      .o_pc(o_pc4)
   );
 
   xilinx_one_port_ram_async #(
@@ -48,6 +46,6 @@ module instruction_fetch (
     end
   end
 
-  assign instruction_addr = i_write_instruction_mem ? i_instruction_mem_addr : pc;
+  assign instruction_addr = i_write_instruction_mem ? i_instruction_mem_addr : o_pc4;
 
 endmodule
