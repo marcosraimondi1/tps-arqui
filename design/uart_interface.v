@@ -313,7 +313,7 @@ module uart_interface #(
             end else begin
               // send used_mem data
               next_tx_start = 1;
-              next_tx_data  = used_mem[(counter-MAX_DATOS*4)*8+:8];
+              next_tx_data  = used_mem[MAX_DATOS-1-(counter-MAX_DATOS*4)*8-:8];
               next_counter  = counter + 1;  // contador de bytes
             end
           end
