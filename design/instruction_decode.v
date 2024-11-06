@@ -255,17 +255,17 @@ module instruction_decode (
     o_salto_con_registro = 2'b00;  // no salto
     case (opcode)
       OPCODE_BEQ: begin
+        o_salto_con_registro = 2'b01;  // salto usando rs y rt
         if (RA_wire == RB_wire) begin
           o_jump = 1'b1;  // se cumple la condicion
-          o_jump_addr = i_pc4 + (inmediato << 2);
-          o_salto_con_registro = 2'b01;  // salto usando rs y rt
+          o_jump_addr = i_pc4 + (inmediato << 2) + 4;
         end
       end
-      OPCODE_BNE: begin
+      OPCODE_BNE: begin     
+        o_salto_con_registro = 2'b01;  // salto usando rs y rt
         if (RA_wire != RB_wire) begin
           o_jump = 1'b1;  // se cumple la condicion
-          o_jump_addr = i_pc4 + (inmediato << 2);
-          o_salto_con_registro = 2'b01;  // salto usando rs y rt
+          o_jump_addr = i_pc4 + (inmediato << 2) + 4;
         end
       end
       OPCODE_JUMP: begin

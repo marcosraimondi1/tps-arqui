@@ -3,10 +3,10 @@
         0,
         0,
         0,
-        0,
-        7123,
-        0,
-        0,
+        8,
+        8,
+        1,
+        1,
         0,
         0,
         0,
@@ -34,36 +34,36 @@
         0
     ],
     "if_id": {
-        "instruction": 8597539,
-        "pc4": 16
+        "instruction": 0,
+        "pc4": 32
     },
     "id_ex": {
         "RA": 0,
         "RB": 0,
-        "rs": 3,
-        "rt": 4,
-        "rd": 5,
-        "funct": 33,
-        "inmediato": 10273,
-        "opcode": 0,
+        "rs": 0,
+        "rt": 8,
+        "rd": 0,
+        "funct": 1,
+        "inmediato": 1,
+        "opcode": 8,
         "shamt": 0,
         "WB_ctrl": 3,
         "MEM_ctrl": 0,
-        "EX_ctrl": 6
+        "EX_ctrl": 11
     },
     "ex_mem": {
-        "write_reg": 3,
+        "write_reg": 7,
         "data_to_write": 0,
-        "ALU_result": 85,
+        "ALU_result": 1,
         "WB_ctrl": 3,
         "MEM_ctrl": 0
     },
     "mem_wb": {
-        "ALU_result": 7123,
+        "ALU_result": 1,
         "read_data_from_mem": 0,
-        "write_reg": 4,
+        "write_reg": 6,
         "WB_ctrl": 3
     },
     "mem": [],
-    "datetime": "2024-11-06 16:37:49"
+    "datetime": "2024-11-06 18:04:38"
 }
