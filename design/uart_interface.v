@@ -445,22 +445,29 @@ module uart_interface #(
   assign o_r_addr_registers = r_addr_registers;
   assign o_r_addr_data_mem = r_addr_data_mem;
 
-  wire [4:0] write_reg_EX_MEM;
+  wire [7:0] write_reg_byte_EX_MEM;
+  wire [7:0] MEM_ctrl_byte_EX_MEM;
+  wire [7:0] WB_ctrl_byte_EX_MEM;
   wire [31:0] data_to_write_in_MEM;
-  wire WB_write_EX_MEM;
-  wire WB_mem_to_reg_EX_MEM;
-  wire MEM_read_EX_MEM;
-  wire MEM_unsigned_EX_MEM;
-  wire [1:0] MEM_byte_half_word_EX_MEM;
+  wire MEM_read__out_execute;
+  wire MEM_unsigned__out_execute;
+  wire [1:0] MEM_byte_half_word__out_execute;
+  wire [2:0] nada;
   assign {
-      write_reg_EX_MEM,
-      data_to_write_in_MEM,
-      ALU_result_EX_MEM,
-      WB_write_EX_MEM,
-      WB_mem_to_reg_EX_MEM,
-      MEM_read_EX_MEM,
-      MEM_write_EX_MEM,
-      MEM_unsigned_EX_MEM,
-      MEM_byte_half_word_EX_MEM
-      } = i_EX_MEM;
+    nada,
+    MEM_read__out_execute,
+    MEM_write_EX_MEM,
+    MEM_unsigned__out_execute,
+    MEM_byte_half_word__out_execute
+  } = MEM_ctrl_byte_EX_MEM;
+
+  assign {write_reg_byte_EX_MEM,  // 8 bits
+      data_to_write_in_MEM,  // 32 bits
+      ALU_result_EX_MEM,  // 32 bits
+      WB_ctrl_byte_EX_MEM,  // 8 bits
+      MEM_ctrl_byte_EX_MEM  // 8 bits
+      } = i_EX_MEM;  // total 88 bits
+
+  // wire mem_write;
+  // assign mem_write = i_EX_MEM[3];
 endmodule

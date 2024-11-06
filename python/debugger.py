@@ -1,6 +1,6 @@
-import time
 import serial
 import compiler as cp
+import pprint
 
 BAUDRATE = 19200
 PORT = '/dev/ttyUSB1'
@@ -82,7 +82,7 @@ def run_continuous():
     print_data(data)
 
 def print_data(data):
-    print(data)
+    pprint.pprint(data)
 
 
 def get_data():
@@ -161,6 +161,7 @@ def receive_mem():
     return recv
 
 def decode_mem(data):
+    print("recibido mem: ", data)
     data_len = (len(data) - USED_MEM_ARRAY_LEN) // 4 # 4 bytes son 1 dato
 
     mem_data = []
@@ -178,6 +179,9 @@ def decode_mem(data):
         print("used_mem: ", used_mem)
         print("mem_data: ", mem_data)
 
+
+    print("used_mem: ", used_mem)
+    print("mem_data: ", mem_data)
 
     data_address = []
     i = 0
