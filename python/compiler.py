@@ -17,12 +17,14 @@ class Assembler:
             file.close()
         except FileNotFoundError:
             print(f'No se encontro el archivo {self.file_path}')
-            exit(1)
+            return False
 
         for inst in self.asm_tokens:
             self.binary_code += (self.instruction_generator(inst))
 
         self.write_output()
+
+        return True
 
 
     def write_output(self):

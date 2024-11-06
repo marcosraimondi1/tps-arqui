@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Debugger</title>
+	<link rel="stylesheet" href="https://unpkg.com/boltcss/bolt.min.css">
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<h1>MIPS Debugger</h1>
+	<div id="control-container">
+		<div>
+			<label for="baudrate">Baudrate:</label>
+			<input type="number" value="19200" id="baudrate" name="baudrate">
+
+			<label for="port">Port:</label>
+			<input type="text" value="/dev/ttyUSB1" id="port" name="port">
+		</div>
+
+		<div>
+			<label for="file">Select a file:</label>
+			<input type="text" value="instructions.asm" id="file" name="file">
+			<button onclick="loadFile()">Load File</button>
+
+			<label for="uart">Send Uart:</label>
+			<input type="text" id="uart" name="uart">
+			<button onclick="sendUart()">Send</button>
+
+		</div>
+
+		<div>
+			<button style="color:#5b5fde;font-weight: bold;" onclick="runCont()"> Run Continuous</button>
+			<button style="color:#509c4b;font-weight: bold;" onclick="startDebug()"> Start Debug</button>
+			<button style="color:#b1bf41;font-weight: bold;" onclick="step()"> Step</button>
+			<button style="color:#e35144;font-weight: bold;" onclick="stop()"> Stop Debug</button>
+		</div>
+
+		<button onclick="checkHealth()">Check Health</button>
+	</div>
+
+	<div id="data-container">
+		<div>
+			<div id="latches-container">
+				<div>
+					<h2>IF/ID</h2>
+					<div class="latch" id="ifid">
+					</div>
+				</div>
+				<div>
+					<h2>ID/EX</h2>
+					<div class="latch" id="idex">
+					</div>
+				</div>
+				<div>
+					<h2>EX/MEM</h2>
+					<div class="latch" id="exmem">
+					</div>
+				</div>
+				<div>
+					<h2>MEM/WB</h2>
+					<div class="latch" id="memwb">
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div>
+			<h2>CONSOLE OUTPUT</h2>
+			<div id="console-output">
+			</div>
+		</div>
+	</div>
+
+	<h2>REGISTERS</h2>
+	<div id="regs-container">
+	</div>
+
+	<h2>USED MEMORY</h2>
+	<div id="mem-container">
+	</div>
+
+	<script src="app.js"></script>
+</body>
+
+</html>

@@ -65,30 +65,32 @@ def run_tests(ser):
 
     print("Running tests")
 
-    i = 1
+    test_id = 1
     while True: 
-        test_dir = f"tests/test{i}"
-        test_instructions = test_dir + f"/test{i}.asm"
-        test_expected_results = test_dir + f"/test{i}.json"
+        test_dir = f"tests/test{test_id}"
+        test_instructions = test_dir + f"/test{test_id}.asm"
+        test_expected_results = test_dir + f"/test{test_id}.json"
 
-        asm = cp.Assembler(test_instructions, test_dir + f"/test{i}.hex", True)
+        asm = cp.Assembler(test_instructions, test_dir + f"/test{test_id}.hex", True)
 
         if not asm.compile():
             # file not found
             break
                 
+        print("Running test ", test_id, " ", test_instructions)
+
         send_instructions(asm.byte_code, ser)
 
         send_opcode(START_CONT_OP, ser)
         data = get_data(ser)
-        write_data(data, test_dir + f"/test{i}_results.json")
+        write_data(data, test_dir + f"/test{test_id}_results.json")
 
         expected_data = dict()
         try:
             with open(test_expected_results, "r") as file:
                 expected_data = json.load(file)
         except Exception as e:
-            print("Error reading expected results: ", e)
+            print(f"Error reading {test_expected_results}: ", e)
             break
 
         # compare registers
@@ -107,10 +109,12 @@ def run_tests(ser):
                 print(f"Error in memory address {i}: {mem_data[i]['address']} != {expected_data['mem'][i]['address']}")
 
             if mem_data[i]["data"] != expected_data["mem"][i]["data"]:
-                print(f"Error in memory address {mem_data[i]['address']}: {mem_data[i]['data']} != {expected_data['mem'][i]['data']}")
+                print(f"Error in memory data in addr {mem_data[i]['address']}: {mem_data[i]['data']} != {expected_data['mem'][i]['data']}")
 
-        i += 1
-    print(f"Finished running {i-1} tests")
+        print(f"Test {test_id} passed")
+
+        test_id += 1
+    print(f"Finished running {test_id-1} tests")
 
 
 def open_serial(port, baudrate):

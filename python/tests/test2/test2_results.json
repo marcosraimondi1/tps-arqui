@@ -1,0 +1,78 @@
+{
+    "registers": [
+        0,
+        10,
+        0,
+        85,
+        95,
+        56,
+        80,
+        15,
+        15,
+        0,
+        0,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        68,
+        0
+    ],
+    "if_id": {
+        "instruction": 4294967295,
+        "pc4": 128
+    },
+    "id_ex": {
+        "RA": 0,
+        "RB": 0,
+        "rs": 31,
+        "rt": 31,
+        "rd": 31,
+        "funct": 63,
+        "inmediato": 4294967295,
+        "opcode": 63,
+        "shamt": 31,
+        "WB_ctrl": 0,
+        "MEM_ctrl": 0,
+        "EX_ctrl": 0
+    },
+    "ex_mem": {
+        "write_reg": 31,
+        "data_to_write": 0,
+        "ALU_result": 0,
+        "WB_ctrl": 0,
+        "MEM_ctrl": 0
+    },
+    "mem_wb": {
+        "ALU_result": 8,
+        "read_data_from_mem": 0,
+        "write_reg": 11,
+        "WB_ctrl": 3
+    },
+    "mem": [
+        {
+            "data": 4278190080,
+            "address": 8
+        },
+        {
+            "data": 0,
+            "address": 12
+        }
+    ],
+    "datetime": "2024-11-06 16:17:38"
+}

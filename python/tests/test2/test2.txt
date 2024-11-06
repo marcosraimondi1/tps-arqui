@@ -1,0 +1,32 @@
+0	J	5		Salta a JAL 8 PC=20 (ejecuta delay slot)
+4	ADDI	R3,R0,85	R3 = 85
+8	ADDI	R3,R3,10	X
+12	NOP			X				
+16	NOP			X
+20	JAL 	8		Salta a ADDI	R5,R0,56 PC=32, R31 = 28 (ejecuta delay slot)
+24	ADDI	R4,R0,95	R4 = 95
+28	ADDI	R4,R4,5 	X
+32	ADDI	R5,R0,56	R5 = 56 = 38H
+36	JR	R5		Salta a ADDI	R6,R0,80 PC=56 (ejecuta delay slot)
+40	NOP			
+44	ADDI	R2,R0,2		X
+48	NOP			X
+52	NOP			X
+56	ADDI	R6,R0,80	R6 = 80
+60	JALR	R30,R6		Salta a ADDI	R7,R0,15 PC=80, R30 = 16*4+4 = 68 (ejecuta delay slot)
+64	ADDI	R1,R0,10        R1 = 10
+68	NOP			X
+72	NOP			X
+76	NOP			X
+80	ADDI	R7,R0,15	R7 = 15
+84	ADDI	R8,R0,8		R8 = 8 al final del bucle 15
+88	ADDI	R8,R8,1		
+92	SW	R7,0(8)
+96	BNE	R8,R7,-3	Buclea las ultimas 2 instrucciones sumando la pos de mem y haciendo store hasta el 15
+100	NOP
+104	BEQ	R8,R7,4		Si R8 == R7, salta hasta ADDI	R11,R0,8 PC = 112
+108	NOP
+112	ADDI	R9,R0,8		
+116	ADDI	R10,R0,8
+120	ADDI	R11,R0,8        R11 = 8
+124	HALT                 
