@@ -18,7 +18,7 @@ SH 13,8(0) -> M8 = FFFF F90A "OK" (por extension de signo) ---------------------
 SW 13,12(0) -> M12 = 3FFF F90A "OK"
 LB 18,12(0) -> R18 = M12B = 0A "OK"
 ANDI 18,19,6230 -> R19 = R18 & 6230 = 0010 = 2 "OK"
-LH 20,12(0) -> R20 = M12W = FFFF F90A "OK"
+LH 20,12(0) -> R20 = M12W(3FFF F90A) con extension de signo = FFFF F90A "OK"
 ORI 21,20,6230 -> R21 = R20 | 6230 = FFFF F95E "OK"
 LW  22,12(0) -> R22 = M12 = 3FFF F90A "OK"
 XORI 23,22,6230 -> R23 = R22 XOR 6230 = 3FFF E15C "OK"
