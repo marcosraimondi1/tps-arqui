@@ -84,4 +84,14 @@ que se necesita para enviar el resultado y por lo tanto no habrá conflicto.
 
 ## BUILD
 
+1. Crear proyecto para basys3 en Vivado
+2. Importar archivos .v de diseño de la carpeta `design/`
+3. Instanciar ipcore de clocking wizard usando script .tcl de `design/clk_wiz1.tcl`:
+    - abrir en Vivado la consola TCL
+    - ejecutar `source <path to clk_wiz1.tcl>`
+4. Crear bitstream y cargar top.bit a la FPGA
+5. Conectada la placa a la PC, ejecutar script de python para correr pruebas:
+    - se usa la libreria pyserial `pip install pyserial`
+    - correr script `python python/uart_alu.py` 
+
 
